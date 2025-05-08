@@ -1,0 +1,6 @@
+Este proyecto de TFG se centra en el desarrollo de un pipeline de análisis de datos para imágenes de espectrometría de masas (MALDI-MSI), aplicado a muestras de cáncer de vejiga urinaria (estadio T1). El objetivo principal ha sido implementar un flujo de trabajo reproducible para el coregistro de imágenes de microscopía y espectrometría, así como explorar distintos métodos de preprocesamiento, reducción de dimensionalidad y clusterización no supervisada para identificar patrones moleculares en regiones tumorales.
+Los files de este repositorio son 4: 
+- Combinaciones de normalizaciones-reducción de la dimensionalidad-clustering: Aqui se encontrara todo el codigo relacionado con el "workflow" seguido en el estudio.
+- Script obtención de las figuras 21 y 22 del TFG: Este coidgo esta relacionado con la obtención de las diferentes "Average of Sillhouette" para la evaluación de la mejor combinación y así poder obtener el pipeline.
+- Carpeta m: Aqui se encuentran el t-test y todo el código relacionado con la obtención del Volcano Plot del TFG y el filtrado de features de la zona tumor y no tumor de la muetra de cáncer de vejiga urinaria segmentada
+- Corregistro(MSIreg): Se aplica el corregistro de un feature de la zona tumoral que puede ser un potencial biomarcador, al haber sido encontrado en otros estudios. El corregistro se hace con la imagen histopatológica.
