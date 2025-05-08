@@ -1,0 +1,1986 @@
+Se inicia el script cargando paquetes, estableciendo directorios y cragando la pks. Además, se hace el tratamiento de los datos (Escalado y Normalizaciones)
+```{r}
+setwd("D:/TFG_AM")
+package_list <- c("rMSI2", "stats", "dbscan", "ggplot2", "fastcluster", "viridis",  "dplyr", "FactoMineR", "factoextra", "gridExtra", "Rtsne", "NbClust")
+lapply(package_list, library, character.only = TRUE)
+pks <- rMSI2::LoadPeakMatrix("bladder.pkmat")
+scaled_data <- scale(pks$intensity)
+normalized_data_TIC <- pks$intensity / pks$normalizations$TIC
+normalized_data_RMS <- pks$intensity / pks$normalizations$RMS
+normalized_data_MAX <- pks$intensity / pks$normalizations$MAX
+
+
+```
+Se aplica la clusterización K-MEANS sin reducción de la dimensionalidad.Además, se calcula el tiempo que le cuesta a la máquina ejecutarlo. 
+```{r}
+tiempo_KMEANS_non_reducted <- system.time({
+  
+  set.seed(111) #Lo hace reproducible
+  pks_kmeans_k4 <- kmeans(scaled_data, centers = 4)
+  set.seed(111)
+  pks_kmeans_k7 <- kmeans(scaled_data, centers = 7)
+  set.seed(111)
+  pks_kmeans_k8 <- kmeans(scaled_data, centers = 8)
+  set.seed(111)
+  TIC_kmeans_k4 <- kmeans(scale(normalized_data_TIC), centers = 4)
+  set.seed(111)
+  TIC_kmeans_k7 <- kmeans(scale(normalized_data_TIC), centers = 7)
+  set.seed(111)
+  TIC_kmeans_k8 <- kmeans(scale(normalized_data_TIC), centers = 8)
+  set.seed(111)
+  RMS_kmeans_k4 <- kmeans(scale(normalized_data_RMS), centers = 4)
+  set.seed(111)
+  RMS_kmeans_k7 <- kmeans(scale(normalized_data_RMS), centers = 7)
+  set.seed(111)
+  RMS_kmeans_k8 <- kmeans(scale(normalized_data_RMS), centers = 8)
+  set.seed(111)
+  MAX_kmeans_k4 <- kmeans(scale(normalized_data_MAX), centers = 4)
+  set.seed(111)
+  MAX_kmeans_k7 <- kmeans(scale(normalized_data_MAX), centers = 7)
+  set.seed(111)
+  MAX_kmeans_k8 <- kmeans(scale(normalized_data_MAX), centers = 8)
+  
+  
+  cluster_colors_4 <- viridis::viridis(4, option = "plasma")
+  cluster_colors_7 <- viridis::viridis(7, option = "plasma")
+  cluster_colors_8 <- viridis::viridis(8, option = "plasma")
+  
+  #Plots_kmeans:
+  
+  df_nr_1 <- data.frame(pks$pos, cluster_1 = as.factor(pks_kmeans_k4$cluster))
+  plot_pks_kmeans_k4 <- ggplot(df_nr_1, aes(x = x, y = y, fill = cluster_1)) + geom_raster() + scale_fill_manual(values = cluster_colors_4) + labs(fill = "Clusters", title = paste("Cluster analysis pks with 4 Cluster")) +
+    theme_minimal()
+  
+  df_nr_2 <- data.frame(pks$pos, cluster_2 = as.factor(pks_kmeans_k7$cluster))
+  plot_pks_kmeans_k7 <- ggplot(df_nr_2, aes(x = x, y = y, fill = cluster_2)) + geom_raster() + scale_fill_manual(values = cluster_colors_7) + labs(fill = "Clusters", title = paste("Cluster analysis pks with 7 Cluster")) +
+    theme_minimal()
+  
+  df_nr_3 <- data.frame(pks$pos, cluster_3 = as.factor(pks_kmeans_k8$cluster))
+  plot_pks_kmeans_k8 <- ggplot(df_nr_3, aes(x = x, y = y, fill = cluster_3)) + geom_raster() + scale_fill_manual(values = cluster_colors_8) + labs(fill = "Clusters", title = paste("Cluster analysis pks with 8 Cluster")) +
+    theme_minimal()
+  
+  df_nr_7 <- data.frame(pks$pos, cluster_7 = as.factor(TIC_kmeans_k4$cluster))
+  plot_TIC_kmeans_k4 <- ggplot(df_nr_7, aes(x = x, y = y, fill = cluster_7)) + geom_raster() + scale_fill_manual(values = cluster_colors_4) + labs(fill = "Clusters", title = paste("Cluster analysis TIC with 4 Cluster")) +
+    theme_minimal()
+  
+  df_nr_8 <- data.frame(pks$pos, cluster_8 = as.factor(TIC_kmeans_k7$cluster))
+  plot_TIC_kmeans_k7 <- ggplot(df_nr_8, aes(x = x, y = y, fill = cluster_8)) + geom_raster() + scale_fill_manual(values = cluster_colors_7) + labs(fill = "Clusters", title = paste("Cluster analysis TIC with 7 Cluster")) +
+    theme_minimal()
+  
+  df_nr_9 <- data.frame(pks$pos, cluster_9 = as.factor(TIC_kmeans_k8$cluster))
+  plot_TIC_kmeans_k8 <- ggplot(df_nr_9, aes(x = x, y = y, fill = cluster_9)) + geom_raster() + scale_fill_manual(values = cluster_colors_8) + labs(fill = "Clusters", title = paste("Cluster analysis TIC with 8 Cluster")) +
+    theme_minimal()
+  
+  df_nr_10 <- data.frame(pks$pos, cluster_10 = as.factor(RMS_kmeans_k4$cluster))
+  plot_RMS_kmeans_k4 <- ggplot(df_nr_10, aes(x = x, y = y, fill = cluster_10)) + geom_raster() + scale_fill_manual(values = cluster_colors_4) + labs(fill = "Clusters", title = paste("Cluster analysis RMS with 4 Cluster")) +
+    theme_minimal()
+  
+  df_nr_11 <- data.frame(pks$pos, cluster_11 = as.factor(RMS_kmeans_k7$cluster))
+  plot_RMS_kmeans_k7 <- ggplot(df_nr_11, aes(x = x, y = y, fill = cluster_11)) + geom_raster() + scale_fill_manual(values = cluster_colors_7) + labs(fill = "Clusters", title = paste("Cluster analysis RMS with 7 Cluster")) +
+    theme_minimal()
+  
+  df_nr_12 <- data.frame(pks$pos, cluster_12 = as.factor(RMS_kmeans_k8$cluster))
+  plot_RMS_kmeans_k8 <- ggplot(df_nr_12, aes(x = x, y = y, fill = cluster_12)) + geom_raster() + scale_fill_manual(values = cluster_colors_8) + labs(fill = "Clusters", title = paste("Cluster analysis RMS with 8 Cluster")) +
+    theme_minimal()
+  
+  df_nr_13 <- data.frame(pks$pos, cluster_13 = as.factor(MAX_kmeans_k4$cluster))
+  plot_MAX_kmeans_k4 <- ggplot(df_nr_13, aes(x = x, y = y, fill = cluster_13)) + geom_raster() + scale_fill_manual(values = cluster_colors_4) + labs(fill = "Clusters", title = paste("Cluster analysis MAX with 4 Cluster")) +
+    theme_minimal()
+  
+  df_nr_14 <- data.frame(pks$pos, cluster_14 = as.factor(MAX_kmeans_k7$cluster))
+  plot_MAX_kmeans_k7 <- ggplot(df_nr_14, aes(x = x, y = y, fill = cluster_14)) + geom_raster() + scale_fill_manual(values = cluster_colors_7) + labs(fill = "Clusters", title = paste("Cluster analysis MAX with 7 Cluster")) +
+    theme_minimal()
+  
+  df_nr_15 <- data.frame(pks$pos, cluster_15 = as.factor(MAX_kmeans_k8$cluster))
+  plot_MAX_kmeans_k8 <- ggplot(df_nr_15, aes(x = x, y = y, fill = cluster_15)) + geom_raster() + scale_fill_manual(values = cluster_colors_8) + labs(fill = "Clusters", title = paste("Cluster analysis MAX with 8 Cluster")) +
+    theme_minimal()
+  
+  pdf("kmeans_noreducted_K4,7,8_TFG_AM(II).pdf")
+  
+  print(plot_pks_kmeans_k4)
+  print(plot_pks_kmeans_k7)
+  print(plot_pks_kmeans_k8)
+  print(plot_TIC_kmeans_k4)
+  print(plot_TIC_kmeans_k7)
+  print(plot_TIC_kmeans_k8)
+  print(plot_RMS_kmeans_k4)
+  print(plot_RMS_kmeans_k7)
+  print(plot_RMS_kmeans_k8)
+  print(plot_MAX_kmeans_k4)
+  print(plot_MAX_kmeans_k7)
+  print(plot_MAX_kmeans_k8)
+  
+  dev.off()
+  
+})
+
+cat("Tiempo total de ejecución KMEANS sin reducción:", tiempo_KMEANS_non_reducted[3], "segundos\n")
+
+rm(list = c(paste0("df_nr_", 1:15), 
+            paste0("plot_", c("pks", "scaled", "TIC", "RMS", "MAX"), "_kmeans_k", c(4,7,8)),
+            "cluster_colors_4", "cluster_colors_7", "cluster_colors_8"))
+
+
+
+```
+Se lleva a termino la clusterización jerarquica (HC) sin reducción de la dimensionalidad. Además, se calcula el tiempo de ejecución de la misma en la máquina. 
+
+```{r}
+#para los pks sin reducir: 
+tiempo_HC_non_reducted <- system.time({
+  
+  distance_pks_data <- dist(scaled_data, method = "euclidean")
+  hclust_pks_data <- fastcluster::hclust(distance_pks_data, method="complete")
+  hgroups_pks_data_4 <- cutree(hclust_pks_data, k=4)
+  hgroups_pks_data_7 <- cutree(hclust_pks_data, k=7)
+  hgroups_pks_data_8 <- cutree(hclust_pks_data, k=8)
+  clustering_pks_data_4 <- ggplot(pks$pos, aes(x=x,y=y, fill=hgroups_pks_data_4)) + geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title="Hierarchial_pks_data") + theme_light()
+  clustering_pks_data_7 <- ggplot(pks$pos, aes(x=x,y=y, fill=hgroups_pks_data_7)) + geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title="Hierarchial_pks_data") + theme_light()
+  clustering_pks_data_8 <- ggplot(pks$pos, aes(x=x,y=y, fill=hgroups_pks_data_8)) + geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title="Hierarchial_pks_data") + theme_light()
+  
+
+  #para normalized_data_TIC sin reducir: 
+  
+  distance_normalized_data_TIC <- dist(scale(normalized_data_TIC), method = "euclidean")
+  hclust_normalized_data_TIC<- fastcluster::hclust(distance_normalized_data_TIC, method="complete")
+  hgroups_normalized_data_TIC_4 <- cutree(hclust_normalized_data_TIC, k=4)
+  hgroups_normalized_data_TIC_7 <- cutree(hclust_normalized_data_TIC, k=7)
+  hgroups_normalized_data_TIC_8 <- cutree(hclust_normalized_data_TIC, k=8)
+  clustering_normalized_data_TIC_4 <- ggplot(pks$pos, aes(x=x,y=y, fill=hgroups_normalized_data_TIC_4)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title="Hierarchical_normalized_data_TIC") + theme_light()
+  clustering_normalized_data_TIC_7 <- ggplot(pks$pos, aes(x=x,y=y, fill=hgroups_normalized_data_TIC_7)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title="Hierarchical_normalized_data_TIC") + theme_light()
+  clustering_normalized_data_TIC_8 <- ggplot(pks$pos, aes(x=x,y=y, fill=hgroups_normalized_data_TIC_8)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title="Hierarchical_normalized_data_TIC") + theme_light()
+  
+  #para normalized_data_RMS sin reducir
+  
+  distance_normalized_data_RMS <- dist(scale(normalized_data_RMS), method = "euclidean")
+  hclust_normalized_data_RMS <- fastcluster::hclust(distance_normalized_data_RMS, method="complete")
+  hgroups_normalized_data_RMS_4 <- cutree(hclust_normalized_data_RMS, k=4)
+  hgroups_normalized_data_RMS_7 <- cutree(hclust_normalized_data_RMS, k=7)
+  hgroups_normalized_data_RMS_8 <- cutree(hclust_normalized_data_RMS, k=8)
+  clustering_normalized_data_RMS_4 <- ggplot(pks$pos, aes(x=x,y=y, fill=hgroups_normalized_data_RMS_4)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title="Hierarchical_normalized_data_RMS") + theme_light()
+  clustering_normalized_data_RMS_7 <- ggplot(pks$pos, aes(x=x,y=y, fill=hgroups_normalized_data_RMS_7)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title="Hierarchical_normalized_data_RMS") + theme_light()
+  clustering_normalized_data_RMS_8 <- ggplot(pks$pos, aes(x=x,y=y, fill=hgroups_normalized_data_RMS_8)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title="Hierarchical_normalized_data_RMS") + theme_light()
+  
+  #para normalized_data_MAX sin reducir: 
+  
+  distance_normalized_data_MAX <- dist(scale(normalized_data_MAX), method = "euclidean")
+  hclust_normalized_data_MAX <- fastcluster::hclust(distance_normalized_data_MAX, method="complete")
+  hgroups_normalized_data_MAX_4 <- cutree(hclust_normalized_data_MAX, k=4)
+  hgroups_normalized_data_MAX_7 <- cutree(hclust_normalized_data_MAX, k=7)
+  hgroups_normalized_data_MAX_8 <- cutree(hclust_normalized_data_MAX, k=8)
+  clustering_normalized_data_MAX_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_normalized_data_MAX_4)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_normalized_data_MAX") + theme_light()
+  clustering_normalized_data_MAX_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_normalized_data_MAX_7)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_normalized_data_MAX") + theme_light()
+  clustering_normalized_data_MAX_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_normalized_data_MAX_8)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_normalized_data_MAX") + theme_light()
+  
+  #print un .pdf con le método jerarquico para el clustering sin reducción: 
+  
+  pdf("HC_noreducted_K4,7,8_TFG_AM.pdf")
+  
+  print(clustering_pks_data_4)
+  print(clustering_pks_data_7)
+  print(clustering_pks_data_8)
+  print(clustering_normalized_data_TIC_4)
+  print(clustering_normalized_data_TIC_7)
+  print(clustering_normalized_data_TIC_8)
+  print(clustering_normalized_data_RMS_4)
+  print(clustering_normalized_data_RMS_7)
+  print(clustering_normalized_data_RMS_8)
+  print(clustering_normalized_data_MAX_4)
+  print(clustering_normalized_data_MAX_7)
+  print(clustering_normalized_data_MAX_8)
+  
+  dev.off() })
+
+cat("Tiempo total de ejecución HC sin reducción:", tiempo_HC_non_reducted [3], "segundos\n")
+# Eliminar objetos innecesarios
+rm(list = c(
+  paste0("distance_", c("pks_data", "scaled_data", "normalized_data_TIC", "normalized_data_RMS", "normalized_data_MAX")),
+  paste0("clustering_", c("pks_data", "scaled_data", "normalized_data_TIC", "normalized_data_RMS", "normalized_data_MAX"), "_", c(4,7,8))
+))
+
+
+Se lleva a termino la clusterización por DBSCAN sin reducción de la dimensionalidad. Además, se calcula el tiempo de ejecución de la misma en la máquina. 
+
+
+tiempo_DBSCAM_non_reducted <- system.time({
+  
+  minPts <- (400)
+  #Abre un archivo PNG para el gráfico pks: 
+  png("KNN_distplot_pks.png")
+  kNNdistplot(pks$intensity, k = minPts - 1, minPts = minPts)
+  # Agrega un título al gráfico
+  title(main = "KNN Distplot - pks")
+  dev.off()  # Cierra el dispositivo gráfico (guardar el gráfico en el PNG)
+  
+  # Abre un archivo PNG para el gráfico TIC
+  png("KNN_distplot_TIC.png")
+  # Genera el gráfico para los datos TIC
+  kNNdistplot(normalized_data_TIC, k = minPts - 1, minPts = minPts)
+  # Agrega un título al gráfico
+  title(main = "KNN Distplot - TIC")
+  dev.off()  # Cierra el dispositivo gráfico (guardar el gráfico en el PNG)
+  
+  # Abre un archivo PNG para el gráfico RMS
+  png("KNN_distplot_RMS.png")
+  # Genera el gráfico para los datos RMS
+  kNNdistplot(normalized_data_RMS, k = minPts - 1, minPts = minPts)
+  # Agrega un título al gráfico
+  title(main = "KNN Distplot - RMS")
+  dev.off()  # Cierra el dispositivo gráfico (guardar el gráfico en el PNG)
+  
+  # Abre un archivo PNG para el gráfico MAX
+  png("KNN_distplot_MAX.png")
+  # Genera el gráfico para los datos MAX
+  kNNdistplot(normalized_data_MAX, k = minPts - 1, minPts = minPts)
+  # Agrega un título al gráfico
+  title(main = "KNN Distplot - MAX")
+  dev.off()  # Cierra el dispositivo gráfico (guardar el gráfico en el PNG)
+  
+  
+  #Añadir valores de eps segun la KNN_dist: 
+  
+  #Conclusión de eps: 
+  eps_pks <- 80000
+  eps <- 40
+  eps_TIC <- 0.015
+  eps_RMS <- 0.22
+  eps_MAX <- 1.04
+  
+  #Tras esto, se procede a la función frNN. Esta función se utiliza para encontrar los puntos dentro de una vecindad fija (Definida por el parámetro eps) de cada punto de nuetro datasets, #esto es fundamental para acelerar el proceso de cluterizado con el algoritmo DBSCAN (En función de la densidad). 
+  
+  frNN_pks <- frNN(pks$intensity, eps_pks, sort = TRUE, search = "kdtree", bucketSize = 10, splitRule = "suggest", approx = 0)
+  
+  frNN_TIC <- frNN(normalized_data_TIC, eps_TIC, sort = TRUE, search = "kdtree", bucketSize = 10, splitRule = "suggest", approx = 0)
+  
+  frNN_RMS <- frNN(normalized_data_RMS, eps_RMS, sort = TRUE, search = "Kdtree", bucketSize = 10, splitRule = "suggest", approx = 0)
+  
+  
+  frNN_MAX <- frNN(normalized_data_MAX, eps_MAX, sort = TRUE, search = "Kdtree", bucketSize = 10, splitRule = "suggest", approx = 0)
+  
+  
+  #Finalmente, se procede a ejecutar el algoritmo dbscan(): 
+  
+  dbscan_pks <- dbscan(frNN_pks, minPts = minPts)
+  dbscan_TIC <- dbscan(frNN_TIC, minPts = minPts)
+  dbscan_RMS <- dbscan(frNN_RMS, minPts = minPts)
+  dbscan_MAX <- dbscan(frNN_MAX, minPts = minPts)
+  
+  # Función para generar gráficos de clusters
+  plot_clusters <- function(coords, dbscan_result, title) {
+    df <- data.frame(coords, cluster = as.factor(dbscan_result$cluster))  # Convertir clusters a factor
+    
+    ggplot(df, aes(x = x, y = y, color = cluster)) +
+      geom_point(size = 1.5, alpha = 0.7) +  
+      scale_color_manual(values = c("black", rainbow(length(unique(dbscan_result$cluster)) - 1))) + 
+      labs(title = title, color = "Cluster") +
+      theme_minimal()
+  }
+  
+  # Crear archivo PDF para los resultados de DBSCAN con PCA
+  pdf("Clusters_DBSCAN_epsilon_40_0.015_0.22_1.04_80000_and_minPts_400.pdf")
+  
+  # Graficar cada conjunto de datos PCA
+  
+  print(plot_clusters(pks$pos, dbscan_TIC, "Clusters DBSCAN -  TIC"))
+  print(plot_clusters(pks$pos, dbscan_RMS, "Clusters DBSCAN -  RMS"))
+  print(plot_clusters(pks$pos, dbscan_MAX, "Clusters DBSCAN - MAX"))
+  print(plot_clusters(pks$pos, dbscan_pks, "Clusters DBSCAN -  pks"))
+  
+  # Cerrar archivo PDF
+  dev.off() })
+
+cat("Tiempo total de ejecución DBSCAM sin reducción:", tiempo_DBSCAM_non_reducted [3], "segundos\n")
+
+rm(list = c("minPts", "eps_pks", "eps", "eps_TIC", "eps_RMS", "eps_MAX", "plot_clusters",
+            "frNN_pks", "frNN_scaled", "frNN_TIC", "frNN_RMS", "frNN_MAX"))
+
+```
+Se aplica la reducción de la dimensionalidad PCA4 y PCA100 y la clusterización por KMEANS. Además, se hace el cálculo del tiempo de ejecución de K-Means reducida por PCA4.  
+
+```{r}
+# Medición completa del tiempo
+
+tiempo_PCA4 <- system.time({
+  pca4_TIC <- PCA(normalized_data_TIC, scale.unit = TRUE, ncp = 50, graph = FALSE)
+  pca4_RMS <- PCA(normalized_data_RMS, scale.unit = TRUE, ncp = 50, graph = FALSE)
+  pca4_MAX <- PCA(normalized_data_MAX, scale.unit = TRUE, ncp = 50, graph = FALSE)
+  pca4_pks <- PCA(pks$intensity, scale.unit = TRUE, ncp = 50, graph = FALSE)
+})
+
+# Tiempo para PCA con 1000 componentes
+tiempo_PCA100 <- system.time({
+  pca100_TIC <- PCA(normalized_data_TIC, scale.unit = TRUE, ncp = 1000, graph = FALSE)
+  pca100_RMS <- PCA(normalized_data_RMS, scale.unit = TRUE, ncp = 1000, graph = FALSE)
+  pca100_MAX <- PCA(normalized_data_MAX, scale.unit = TRUE, ncp = 1000, graph = FALSE)
+  pca100_pks <- PCA(pks$intensity, scale.unit = TRUE, ncp = 1000, graph = FALSE)
+})
+
+tiempo_KMEANS_PCA4 <- system.time({
+  
+  set.seed(111) # Lo hace reproducible
+  
+  # Modelos K-Means
+  set.seed(111)    
+  pks_pca4_kMeans_k4 <- kmeans(pca4_pks$call$X[, 1:4], center = 4)
+  set.seed(111)
+  pks_pca4_kMeans_k7 <- kmeans(pca4_pks$call$X[, 1:4], center = 7)
+  set.seed(111)
+  pks_pca4_kMeans_k8 <- kmeans(pca4_pks$call$X[, 1:4], center = 8)
+  set.seed(111)
+  TIC_pca4_kMeans_k4 <- kmeans(pca4_TIC$call$X[, 1:1], center = 4)
+  set.seed(111)
+  TIC_pca4_kMeans_k7 <- kmeans(pca4_TIC$call$X[, 1:1], center = 7)
+  set.seed(111)
+  TIC_pca4_kMeans_k8 <- kmeans(pca4_TIC$call$X[, 1:1], center = 8)
+  set.seed(111)
+  RMS_pca4_kMeans_k4 <- kmeans(pca4_RMS$call$X[, 1:4], center = 4)
+  set.seed(111)
+  RMS_pca4_kMeans_k7 <- kmeans(pca4_RMS$call$X[, 1:4], center = 7)
+  set.seed(111)
+  RMS_pca4_kMeans_k8 <- kmeans(pca4_RMS$call$X[, 1:4], center = 8)
+  set.seed(111)
+  MAX_pca4_kMeans_k4 <- kmeans(pca4_MAX$call$X[, 1:4], center = 4)
+  set.seed(111)
+  MAX_pca4_kMeans_k7 <- kmeans(pca4_MAX$call$X[, 1:4], center = 7)
+  set.seed(111)
+  MAX_pca4_kMeans_k8 <- kmeans(pca4_MAX$call$X[, 1:4], center = 8)
+  
+  
+  # Paletas de colores
+  cluster_colors_4_pca4 <- viridis::viridis(4, option = "plasma")
+  cluster_colors_7_pca4 <- viridis::viridis(7, option = "plasma")
+  cluster_colors_8_pca4 <- viridis::viridis(8, option = "plasma")
+  
+  # Data frames
+  df_nr_1_pca4 <- data.frame(pks$pos, cluster_1_pca4 = as.factor(pks_pca4_kMeans_k4$cluster))
+  df_nr_2_pca4 <- data.frame(pks$pos, cluster_2_pca4 = as.factor(pks_pca4_kMeans_k7$cluster))
+  df_nr_3_pca4 <- data.frame(pks$pos, cluster_3_pca4 = as.factor(pks_pca4_kMeans_k8$cluster))
+  df_nr_7_pca4 <- data.frame(pks$pos, cluster_7_pca4 = as.factor(TIC_pca4_kMeans_k4$cluster))
+  df_nr_8_pca4 <- data.frame(pks$pos, cluster_8_pca4 = as.factor(TIC_pca4_kMeans_k7$cluster))
+  df_nr_9_pca4 <- data.frame(pks$pos, cluster_9_pca4 = as.factor(TIC_pca4_kMeans_k8$cluster))
+  df_nr_10_pca4 <- data.frame(pks$pos, cluster_10_pca4 = as.factor(RMS_pca4_kMeans_k4$cluster))
+  df_nr_11_pca4 <- data.frame(pks$pos, cluster_11_pca4 = as.factor(RMS_pca4_kMeans_k7$cluster))
+  df_nr_12_pca4 <- data.frame(pks$pos, cluster_12_pca4 = as.factor(RMS_pca4_kMeans_k8$cluster))
+  df_nr_13_pca4 <- data.frame(pks$pos, cluster_13_pca4 = as.factor(MAX_pca4_kMeans_k4$cluster))
+  df_nr_14_pca4 <- data.frame(pks$pos, cluster_14_pca4 = as.factor(MAX_pca4_kMeans_k7$cluster))
+  df_nr_15_pca4 <- data.frame(pks$pos, cluster_15_pca4 = as.factor(MAX_pca4_kMeans_k8$cluster))
+  
+  # Gráficos
+  plot_pks_pca4_kMeans_k4 <- ggplot(df_nr_1_pca4, aes(x = x, y = y, fill = cluster_1_pca4)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_4_pca4) + 
+    labs(fill = "Clusters", title = "Cluster analysis pks-pca4 with 4 Cluster") +
+    theme_minimal()
+  
+  plot_pks_pca4_kMeans_k7 <- ggplot(df_nr_2_pca4, aes(x = x, y = y, fill = cluster_2_pca4)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_7_pca4) + 
+    labs(fill = "Clusters", title = "Cluster analysis pks-pca4 with 7 Cluster") +
+    theme_minimal()
+  
+  plot_pks_pca4_kMeans_k8 <- ggplot(df_nr_3_pca4, aes(x = x, y = y, fill = cluster_3_pca4)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_8_pca4) + 
+    labs(fill = "Clusters", title = "Cluster analysis pks-pca4 with 8 Cluster") +
+    theme_minimal()
+  
+  plot_TIC_pca4_kMeans_k4 <- ggplot(df_nr_7_pca4, aes(x = x, y = y, fill = cluster_7_pca4)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_4_pca4) + 
+    labs(fill = "Clusters", title = "Cluster analysis TIC-pca4 with 4 Cluster") +
+    theme_minimal()
+  
+  plot_TIC_pca4_kMeans_k7 <- ggplot(df_nr_8_pca4, aes(x = x, y = y, fill = cluster_8_pca4)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_7_pca4) + 
+    labs(fill = "Clusters", title = "Cluster analysis TIC-pca4 with 7 Cluster") +
+    theme_minimal()
+  
+  plot_TIC_pca4_kMeans_k8 <- ggplot(df_nr_9_pca4, aes(x = x, y = y, fill = cluster_9_pca4)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_8_pca4) + 
+    labs(fill = "Clusters", title = "Cluster analysis TIC-pca4 with 8 Cluster") +
+    theme_minimal()
+  
+  plot_RMS_pca4_kMeans_k4 <- ggplot(df_nr_10_pca4, aes(x = x, y = y, fill = cluster_10_pca4)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_4_pca4) + 
+    labs(fill = "Clusters", title = "Cluster analysis RMS-pca4 with 4 Cluster") +
+    theme_minimal()
+  
+  plot_RMS_pca4_kMeans_k7 <- ggplot(df_nr_11_pca4, aes(x = x, y = y, fill = cluster_11_pca4)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_7_pca4) + 
+    labs(fill = "Clusters", title = "Cluster analysis RMS-pca4 with 7 Cluster") +
+    theme_minimal()
+  
+  plot_RMS_pca4_kMeans_k8 <- ggplot(df_nr_12_pca4, aes(x = x, y = y, fill = cluster_12_pca4)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_8_pca4) + 
+    labs(fill = "Clusters", title = "Cluster analysis RMS-pca4 with 8 Cluster") +
+    theme_minimal()
+  
+  plot_MAX_pca4_kMeans_k4 <- ggplot(df_nr_13_pca4, aes(x = x, y = y, fill = cluster_13_pca4)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_4_pca4) + 
+    labs(fill = "Clusters", title = "Cluster analysis MAX-pca4 with 4 Cluster") +
+    theme_minimal()
+  
+  plot_MAX_pca4_kMeans_k7 <- ggplot(df_nr_14_pca4, aes(x = x, y = y, fill = cluster_14_pca4)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_7_pca4) + 
+    labs(fill = "Clusters", title = "Cluster analysis MAX-pca4 with 7 Cluster") +
+    theme_minimal()
+  
+  plot_MAX_pca4_kMeans_k8 <- ggplot(df_nr_15_pca4, aes(x = x, y = y, fill = cluster_15_pca4)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_8_pca4) + 
+    labs(fill = "Clusters", title = "Cluster analysis MAX-pca4 with 8 Cluster") +
+    theme_minimal()
+  
+  # Exportación a PDF
+  pdf("kmeans_pca4_K4,7,8_TFG_AM.pdf")
+  print(plot_pks_pca4_kMeans_k4)
+  print(plot_pks_pca4_kMeans_k7)
+  print(plot_pks_pca4_kMeans_k8)
+  print(plot_TIC_pca4_kMeans_k4)
+  print(plot_TIC_pca4_kMeans_k7)
+  print(plot_TIC_pca4_kMeans_k8)
+  print(plot_RMS_pca4_kMeans_k4)
+  print(plot_RMS_pca4_kMeans_k7)
+  print(plot_RMS_pca4_kMeans_k8)
+  print(plot_MAX_pca4_kMeans_k4)
+  print(plot_MAX_pca4_kMeans_k7)
+  print(plot_MAX_pca4_kMeans_k8)
+  dev.off() })
+
+cat("Tiempo total de ejecución KMEANS-PCA4:", tiempo_KMEANS_PCA4[3], "segundos\n")
+
+rm(list = c(paste0("df_nr_", 1:15, "_pca4"),
+            paste0("plot_", c("pks", "scaled", "TIC", "RMS", "MAX"), "_pca4_kMeans_k", c(4,7,8)),
+            paste0("cluster_colors_", c(4,7,8), "_pca4")))
+
+
+```
+
+Se vuelve a aplicar la clusterización KMEANS tras la reducción de la dimensionalidad por PCA100. 
+
+```{r}
+tiempo_KMEANS_PCA100 <- system.time({
+  
+  set.seed(111) # Lo hace reproducible
+  
+  # Modelos K-Means
+  set.seed(111)
+  pks_pca100_kMeans_k4 <- kmeans(pca100_pks$call$X[, 1:100], centers = 4)
+  set.seed(111)
+  pks_pca100_kMeans_k7 <- kmeans(pca100_pks$call$X[, 1:100], centers = 7)
+  set.seed(111)
+  pks_pca100_kMeans_k8 <- kmeans(pca100_pks$call$X[, 1:100], centers = 8)
+  set.seed(111)
+  TIC_pca100_kMeans_k4 <- kmeans(pca100_TIC$call$X[, 1:100], centers = 4)
+  set.seed(111)
+  TIC_pca100_kMeans_k7 <- kmeans(pca100_TIC$call$X[, 1:100], centers = 7)
+  set.seed(111)
+  TIC_pca100_kMeans_k8 <- kmeans(pca100_TIC$call$X[, 1:100], centers = 8)
+  set.seed(111)
+  RMS_pca100_kMeans_k4 <- kmeans(pca100_RMS$call$X[, 1:100], centers = 4)
+  set.seed(111)
+  RMS_pca100_kMeans_k7 <- kmeans(pca100_RMS$call$X[, 1:100], centers = 7)
+  set.seed(111)
+  RMS_pca100_kMeans_k8 <- kmeans(pca100_RMS$call$X[, 1:100], centers = 8)
+  set.seed(111)
+  MAX_pca100_kMeans_k4 <- kmeans(pca100_MAX$call$X[, 1:100], centers = 4)
+  set.seed(111)
+  MAX_pca100_kMeans_k7 <- kmeans(pca100_MAX$call$X[, 1:100], centers = 7)
+  set.seed(111)
+  MAX_pca100_kMeans_k8 <- kmeans(pca100_MAX$call$X[, 1:100], centers = 8)
+  
+  cluster_colors_4_pca100 <- viridis::viridis(4, option = "plasma")
+  cluster_colors_7_pca100 <- viridis::viridis(7, option = "plasma")
+  cluster_colors_8_pca100 <- viridis::viridis(8, option = "plasma")
+  
+  df_nr_1_pca100 <- data.frame(pks$pos, cluster_1_pca100 = as.factor(pks_pca100_kMeans_k4$cluster))
+  plot_pks_pca100_kMeans_k4 <- ggplot(df_nr_1_pca100, aes(x = x, y = y, fill = cluster_1_pca100)) + geom_raster() + scale_fill_manual(values = cluster_colors_4_pca100) + labs(fill = "Clusters", title = paste("Cluster analysis pks-pca100 with 4 Cluster")) +
+    theme_minimal()
+  
+  df_nr_2_pca100 <- data.frame(pks$pos, cluster_2_pca100 = as.factor(pks_pca100_kMeans_k7$cluster))
+  plot_pks_pca100_kMeans_k7 <- ggplot(df_nr_2_pca100, aes(x = x, y = y, fill = cluster_2_pca100)) + geom_raster() + scale_fill_manual(values = cluster_colors_7_pca100) + labs(fill = "Clusters", title = paste("Cluster analysis pks-pca100 with 7 Cluster")) +
+    theme_minimal()
+  
+  df_nr_3_pca100 <- data.frame(pks$pos, cluster_3_pca100 = as.factor(pks_pca100_kMeans_k8$cluster))
+  plot_pks_pca100_kMeans_k8 <- ggplot(df_nr_3_pca100, aes(x = x, y = y, fill = cluster_3_pca100)) + geom_raster() + scale_fill_manual(values = cluster_colors_8_pca100) + labs(fill = "Clusters", title = paste("Cluster analysis pks-pca100 with 8 Cluster")) +
+    theme_minimal()
+  
+  df_nr_7_pca100 <- data.frame(pks$pos, cluster_7_pca100 = as.factor(TIC_pca100_kMeans_k4$cluster))
+  plot_TIC_pca100_kMeans_k4 <- ggplot(df_nr_7_pca100, aes(x = x, y = y, fill = cluster_7_pca100)) + geom_raster() + scale_fill_manual(values = cluster_colors_4_pca100) + labs(fill = "Clusters", title = paste("Cluster analysis TIC-pca100 with 4 Cluster")) +
+    theme_minimal()
+  
+  df_nr_8_pca100 <- data.frame(pks$pos, cluster_8_pca100 = as.factor(TIC_pca100_kMeans_k7$cluster))
+  plot_TIC_pca100_kMeans_k7 <- ggplot(df_nr_8_pca100, aes(x = x, y = y, fill = cluster_8_pca100)) + geom_raster() + scale_fill_manual(values = cluster_colors_7_pca100) + labs(fill = "Clusters", title = paste("Cluster analysis TIC-pca100 with 7 Cluster")) +
+    theme_minimal()
+  
+  df_nr_9_pca100 <- data.frame(pks$pos, cluster_9_pca100 = as.factor(TIC_pca100_kMeans_k8$cluster))
+  plot_TIC_pca100_kMeans_k8 <- ggplot(df_nr_9_pca100, aes(x = x, y = y, fill = cluster_9_pca100)) + geom_raster() + scale_fill_manual(values = cluster_colors_8_pca100) + labs(fill = "Clusters", title = paste("Cluster analysis TIC-pca100 with 8 Cluster")) +
+    theme_minimal()
+  
+  df_nr_10_pca100 <- data.frame(pks$pos, cluster_10_pca100 = as.factor(RMS_pca100_kMeans_k4$cluster))
+  plot_RMS_pca100_kMeans_k4 <- ggplot(df_nr_10_pca100, aes(x = x, y = y, fill = cluster_10_pca100)) + geom_raster() + scale_fill_manual(values = cluster_colors_4_pca100) + labs(fill = "Clusters", title = paste("Cluster analysis RMS-pca100 with 4 Cluster")) +
+    theme_minimal()
+  
+  df_nr_11_pca100 <- data.frame(pks$pos, cluster_11_pca100 = as.factor(RMS_pca100_kMeans_k7$cluster))
+  plot_RMS_pca100_kMeans_k7 <- ggplot(df_nr_11_pca100, aes(x = x, y = y, fill = cluster_11_pca100)) + geom_raster() + scale_fill_manual(values = cluster_colors_7_pca100) + labs(fill = "Clusters", title = paste("Cluster analysis RMS-pca100 with 7 Cluster")) +
+    theme_minimal()
+  
+  df_nr_12_pca100 <- data.frame(pks$pos, cluster_12_pca100 = as.factor(RMS_pca100_kMeans_k8$cluster))
+  plot_RMS_pca100_kMeans_k8 <- ggplot(df_nr_12_pca100, aes(x = x, y = y, fill = cluster_12_pca100)) + geom_raster() + scale_fill_manual(values = cluster_colors_8_pca100) + labs(fill = "Clusters", title = paste("Cluster analysis RMS-pca100 with 8 Cluster")) +
+    theme_minimal()
+  
+  df_nr_13_pca100 <- data.frame(pks$pos, cluster_13_pca100 = as.factor(MAX_pca100_kMeans_k4$cluster))
+  plot_MAX_pca100_kMeans_k4 <- ggplot(df_nr_13_pca100, aes(x = x, y = y, fill = cluster_13_pca100)) + geom_raster() + scale_fill_manual(values = cluster_colors_4_pca100) + labs(fill = "Clusters", title = paste("Cluster analysis MAX-pca100 with 4 Cluster")) +
+    theme_minimal()
+  
+  df_nr_14_pca100 <- data.frame(pks$pos, cluster_14_pca100 = as.factor(MAX_pca100_kMeans_k7$cluster))
+  plot_MAX_pca100_kMeans_k7 <- ggplot(df_nr_14_pca100, aes(x = x, y = y, fill = cluster_14_pca100)) + geom_raster() + scale_fill_manual(values = cluster_colors_7_pca100) + labs(fill = "Clusters", title = paste("Cluster analysis MAX-pca100 with 7 Cluster")) +
+    theme_minimal()
+  
+  df_nr_15_pca100 <- data.frame(pks$pos, cluster_15_pca100 = as.factor(MAX_pca100_kMeans_k8$cluster))
+  plot_MAX_pca100_kMeans_k8 <- ggplot(df_nr_15_pca100, aes(x = x, y = y, fill = cluster_15_pca100)) + geom_raster() + scale_fill_manual(values = cluster_colors_8_pca100) + labs(fill = "Clusters", title = paste("Cluster analysis MAX-pca100 with 8 Cluster")) +
+    theme_minimal()
+  
+  pdf("kmeans_pca100_K4,7,8_TFG_AM.pdf")
+  
+  print(plot_pks_pca100_kMeans_k4)
+  print(plot_pks_pca100_kMeans_k7)
+  print(plot_pks_pca100_kMeans_k8)
+  print(plot_TIC_pca100_kMeans_k4)
+  print(plot_TIC_pca100_kMeans_k7)
+  print(plot_TIC_pca100_kMeans_k8)
+  print(plot_RMS_pca100_kMeans_k4)
+  print(plot_RMS_pca100_kMeans_k7)
+  print(plot_RMS_pca100_kMeans_k8)
+  print(plot_MAX_pca100_kMeans_k4)
+  print(plot_MAX_pca100_kMeans_k7)
+  print(plot_MAX_pca100_kMeans_k8)
+  
+  dev.off()
+  
+})
+cat("PCA100 (1000 componentes):",tiempo_KMEANS_PCA100 [3], "segundos\n")
+
+rm(list = c(paste0("df_nr_", 1:15, "_pca100"),
+            paste0("plot_", c("pks", "scaled", "TIC", "RMS", "MAX"), "_pca100_kMeans_k4"),
+            paste0("plot_", c("pks", "scaled", "TIC", "RMS", "MAX"), "_pca100_kMeans_k7"),
+            paste0("plot_", c("pks", "scaled", "TIC", "RMS", "MAX"), "_pca100_kMeans_k8"),
+            paste0("cluster_colors_", c(4,7,8), "_pca100")))
+
+```
+Se aplica la clusterización jerarquica tras la reducción de la dimensionalidad por PCA4: 
+  
+  ```{r}
+tiempo_HC_PCA4 <- system.time({
+  
+  # Método jerárquico para los PCA_pks (4 componentes)
+  
+  distance_pca4_pks <- dist(pca4_pks$call$X[, 1:4], method = "euclidean")
+  hclust_pca4_pks <- fastcluster::hclust(distance_pca4_pks, method = "complete")
+  hgroups_pca4_pks_2 <- cutree(hclust_pca4_pks, k = 2)
+  hgroups_pca4_pks_3 <- cutree(hclust_pca4_pks, k = 3)
+  hgroups_pca4_pks_4 <- cutree(hclust_pca4_pks, k = 4)
+  hgroups_pca4_pks_5 <- cutree(hclust_pca4_pks, k = 5)
+  hgroups_pca4_pks_6 <- cutree(hclust_pca4_pks, k = 6)
+  hgroups_pca4_pks_7 <- cutree(hclust_pca4_pks, k = 7)
+  hgroups_pca4_pks_8 <- cutree(hclust_pca4_pks, k = 8)
+  hgroups_pca4_pks_9 <- cutree(hclust_pca4_pks, k = 9)
+  hgroups_pca4_pks_10 <- cutree(hclust_pca4_pks, k = 10)
+  
+  clustering_pca4_pks_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca4_pks_4)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA4 pks k=4") + theme_light()
+  clustering_pca4_pks_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca4_pks_7)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA4 pks k=7") + theme_light()
+  clustering_pca4_pks_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca4_pks_8)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA4 pks k=8") + theme_light()
+  
+  #Método jerárquico para los PCA_TIC (1 componentes): 
+  distance_pca4_tic <- dist(pca4_TIC$call$X[, 1:1], method = "euclidean")
+  hclust_pca4_tic <- fastcluster::hclust(distance_pca4_tic, method = "complete")
+  
+  hgroups_pca4_tic_2 <- cutree(hclust_pca4_tic, k = 2)
+  hgroups_pca4_tic_3 <- cutree(hclust_pca4_tic, k = 3)
+  hgroups_pca4_tic_4 <- cutree(hclust_pca4_tic, k = 4)
+  hgroups_pca4_tic_5 <- cutree(hclust_pca4_tic, k = 5)
+  hgroups_pca4_tic_6 <- cutree(hclust_pca4_tic, k = 6)
+  hgroups_pca4_tic_7 <- cutree(hclust_pca4_tic, k = 7)
+  hgroups_pca4_tic_8 <- cutree(hclust_pca4_tic, k = 8)
+  hgroups_pca4_tic_9 <- cutree(hclust_pca4_tic, k = 9)
+  hgroups_pca4_tic_10 <- cutree(hclust_pca4_tic, k = 10)
+  
+  clustering_pca4_tic_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca4_tic_4)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA4 TIC k=4") + theme_light()
+  clustering_pca4_tic_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca4_tic_7)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA4 TIC k=7") + theme_light()
+  clustering_pca4_tic_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca4_tic_8)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA4 TIC k=8") + theme_light()
+  
+  #Método jerárquico para los PCA_RMS ( 4 componentes): 
+  distance_pca4_rms <- dist(pca4_RMS$call$X[, 1:4], method = "euclidean")
+  hclust_pca4_rms <- fastcluster::hclust(distance_pca4_rms, method = "complete")
+  
+  hgroups_pca4_rms_2 <- cutree(hclust_pca4_rms, k = 2)
+  hgroups_pca4_rms_3 <- cutree(hclust_pca4_rms, k = 3)
+  hgroups_pca4_rms_4 <- cutree(hclust_pca4_rms, k = 4)
+  hgroups_pca4_rms_5 <- cutree(hclust_pca4_rms, k = 5)
+  hgroups_pca4_rms_6 <- cutree(hclust_pca4_rms, k = 6)
+  hgroups_pca4_rms_7 <- cutree(hclust_pca4_rms, k = 7)
+  hgroups_pca4_rms_8 <- cutree(hclust_pca4_rms, k = 8)
+  hgroups_pca4_rms_9 <- cutree(hclust_pca4_rms, k = 9)
+  hgroups_pca4_rms_10 <- cutree(hclust_pca4_rms, k = 10)
+  
+  
+  clustering_pca4_rms_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca4_rms_4)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA4 RMS k=4") + theme_light()
+  clustering_pca4_rms_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca4_rms_7)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA4 RMS k=7") + theme_light()
+  clustering_pca4_rms_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca4_rms_8)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA4 RMS k=8") + theme_light()
+  
+  #Método jerárquico para los PCA_MAX ( 4 componentes): 
+  
+  distance_pca4_max <- dist(pca4_MAX$call$X[, 1:4], method = "euclidean")
+  hclust_pca4_max <- fastcluster::hclust(distance_pca4_max, method = "complete")
+  
+  hgroups_pca4_max_2 <- cutree(hclust_pca4_max, k = 2)
+  hgroups_pca4_max_3 <- cutree(hclust_pca4_max, k = 3)
+  hgroups_pca4_max_4 <- cutree(hclust_pca4_max, k = 4)
+  hgroups_pca4_max_5 <- cutree(hclust_pca4_max, k = 5)
+  hgroups_pca4_max_6 <- cutree(hclust_pca4_max, k = 6)
+  hgroups_pca4_max_7 <- cutree(hclust_pca4_max, k = 7)
+  hgroups_pca4_max_8 <- cutree(hclust_pca4_max, k = 8)
+  hgroups_pca4_max_9 <- cutree(hclust_pca4_max, k = 9)
+  hgroups_pca4_max_10 <- cutree(hclust_pca4_max, k = 10)
+  
+  clustering_pca4_max_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca4_max_4)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA4 MAX k=4") + theme_light()
+  clustering_pca4_max_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca4_max_7)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA4 MAX k=7") + theme_light()
+  clustering_pca4_max_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca4_max_8)) + 
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA4 MAX k=8") + theme_light()
+  
+  pdf("HC_pca4_K4,7,8_TFG_AM.pdf")
+  print(clustering_pca4_pks_4)
+  print(clustering_pca4_pks_7)
+  print(clustering_pca4_pks_8)
+  print(clustering_pca4_tic_4)
+  print(clustering_pca4_tic_7)
+  print(clustering_pca4_tic_8)
+  print(clustering_pca4_rms_4)
+  print(clustering_pca4_rms_7)
+  print(clustering_pca4_rms_8)
+  print(clustering_pca4_max_4)
+  print(clustering_pca4_max_7)
+  print(clustering_pca4_max_8)
+  dev.off() })
+
+cat("Tiempo total de ejecución HC-PCA4:", tiempo_HC_PCA4 [3], "segundos\n")
+rm(list = c(
+  paste0("clustering_pca4_", c("scaled_data", "pks", "tic", "rms", "max"), "_", c(4,7,8)),
+  paste0("distance_pca4_", c("scaled_data", "pks", "tic", "rms", "max"))
+))
+```
+
+Se aplica la clusterización jerarquica tras la reducción de la dimensionalidad por PCA100: 
+  ```{r}
+tiempo_HC_PCA100 <- system.time ({
+  
+  #Método jerárquico para los PCA_pks (100 componentes):
+  
+  distance_pca100_pks <- dist(pca100_pks$call$X[, 1:100], method = "euclidean")
+  hclust_pca100_pks <- fastcluster::hclust(distance_pca100_pks, method = "complete")
+  hgroups_pca100_pks_2 <- cutree(hclust_pca100_pks, k = 2)
+  hgroups_pca100_pks_3 <- cutree(hclust_pca100_pks, k = 3)
+  hgroups_pca100_pks_4 <- cutree(hclust_pca100_pks, k = 4)
+  hgroups_pca100_pks_5 <- cutree(hclust_pca100_pks, k = 5)
+  hgroups_pca100_pks_6 <- cutree(hclust_pca100_pks, k = 6)
+  hgroups_pca100_pks_7 <- cutree(hclust_pca100_pks, k = 7)
+  hgroups_pca100_pks_8 <- cutree(hclust_pca100_pks, k = 8)
+  hgroups_pca100_pks_9 <- cutree(hclust_pca100_pks, k = 9)
+  hgroups_pca100_pks_10 <- cutree(hclust_pca100_pks, k = 10)
+  
+  clustering_pca100_pks_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca100_pks_4)) +
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA100 pks k=4") + theme_light()
+  clustering_pca100_pks_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca100_pks_7)) +
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA100 pks k=7") + theme_light()
+  clustering_pca100_pks_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca100_pks_8)) +
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA100 pks k=8") + theme_light()
+  
+  #Método jerárquico para los PCA_TIC (100 componentes):
+  distance_pca100_tic <- dist(pca100_TIC$call$X[, 1:100], method = "euclidean")
+  hclust_pca100_tic <- fastcluster::hclust(distance_pca100_tic, method = "complete")
+  
+  hgroups_pca100_tic_2 <- cutree(hclust_pca100_tic, k = 2)
+  hgroups_pca100_tic_3 <- cutree(hclust_pca100_tic, k = 3)
+  hgroups_pca100_tic_4 <- cutree(hclust_pca100_tic, k = 4)
+  hgroups_pca100_tic_5 <- cutree(hclust_pca100_tic, k = 5)
+  hgroups_pca100_tic_6 <- cutree(hclust_pca100_tic, k = 6)
+  hgroups_pca100_tic_7 <- cutree(hclust_pca100_tic, k = 7)
+  hgroups_pca100_tic_8 <- cutree(hclust_pca100_tic, k = 8)
+  hgroups_pca100_tic_9 <- cutree(hclust_pca100_tic, k = 9)
+  hgroups_pca100_tic_10 <- cutree(hclust_pca100_tic, k = 10)
+  
+  clustering_pca100_tic_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca100_tic_4)) +
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA100 TIC k=4") + theme_light()
+  clustering_pca100_tic_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca100_tic_7)) +
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA100 TIC k=7") + theme_light()
+  clustering_pca100_tic_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca100_tic_8)) +
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA100 TIC k=8") + theme_light()
+  
+  #Método jerárquico para los PCA_RMS (100 componentes):
+  
+  distance_pca100_rms <- dist(pca100_RMS$call$X[, 1:100], method = "euclidean")
+  hclust_pca100_rms <- fastcluster::hclust(distance_pca100_rms, method = "complete")
+  
+  hgroups_pca100_rms_2 <- cutree(hclust_pca100_rms, k = 2)
+  hgroups_pca100_rms_3 <- cutree(hclust_pca100_rms, k = 3)
+  hgroups_pca100_rms_4 <- cutree(hclust_pca100_rms, k = 4)
+  hgroups_pca100_rms_5 <- cutree(hclust_pca100_rms, k = 5)
+  hgroups_pca100_rms_6 <- cutree(hclust_pca100_rms, k = 6)
+  hgroups_pca100_rms_7 <- cutree(hclust_pca100_rms, k = 7)
+  hgroups_pca100_rms_8 <- cutree(hclust_pca100_rms, k = 8)
+  hgroups_pca100_rms_9 <- cutree(hclust_pca100_rms, k = 9)
+  hgroups_pca100_rms_10 <- cutree(hclust_pca100_rms, k = 10)
+  
+  clustering_pca100_rms_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca100_rms_4)) +
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA100 RMS k=4") + theme_light()
+  clustering_pca100_rms_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca100_rms_7)) +
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA100 RMS k=7") + theme_light()
+  clustering_pca100_rms_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca100_rms_8)) +
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA100 RMS k=8") + theme_light()
+  
+  #Método jerárquico para los PCA_MAX (100 componentes):
+  
+  distance_pca100_max <- dist(pca100_MAX$call$X[, 1:100], method = "euclidean")
+  hclust_pca100_max <- fastcluster::hclust(distance_pca100_max, method = "complete")
+  
+  hgroups_pca100_max_2 <- cutree(hclust_pca100_max, k = 2)
+  hgroups_pca100_max_3 <- cutree(hclust_pca100_max, k = 3)
+  hgroups_pca100_max_4 <- cutree(hclust_pca100_max, k = 4)
+  hgroups_pca100_max_5 <- cutree(hclust_pca100_max, k = 5)
+  hgroups_pca100_max_6 <- cutree(hclust_pca100_max, k = 6)
+  hgroups_pca100_max_7 <- cutree(hclust_pca100_max, k = 7)
+  hgroups_pca100_max_8 <- cutree(hclust_pca100_max, k = 8)
+  hgroups_pca100_max_9 <- cutree(hclust_pca100_max, k = 9)
+  hgroups_pca100_max_10 <- cutree(hclust_pca100_max, k = 10)
+  
+  clustering_pca100_max_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca100_max_4)) +
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA100 MAX k=4") + theme_light()
+  clustering_pca100_max_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca100_max_7)) +
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA100 MAX k=7") + theme_light()
+  clustering_pca100_max_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = hgroups_pca100_max_8)) +
+    geom_raster() + scale_fill_viridis_c(option = "plasma") + labs(title = "Hierarchical_PCA100 MAX k=8") + theme_light()
+  
+  pdf("HC_pca100_K4,7,8_TFG_AM.pdf")
+  print(clustering_pca100_pks_4)
+  print(clustering_pca100_pks_7)
+  print(clustering_pca100_pks_8)
+  print(clustering_pca100_tic_4)
+  print(clustering_pca100_tic_7)
+  print(clustering_pca100_tic_8)
+  print(clustering_pca100_rms_4)
+  print(clustering_pca100_rms_7)
+  print(clustering_pca100_rms_8)
+  print(clustering_pca100_max_4)
+  print(clustering_pca100_max_7)
+  print(clustering_pca100_max_8)
+  dev.off()
+  
+})
+
+cat("Tiempo total de ejecución HC-PCA100:", tiempo_HC_PCA100 [3], "segundos\n")
+rm(list = c(
+  paste0("clustering_pca100_", c("scaled_data", "pks", "tic", "rms", "max"), "_", c(4,7,8)),
+  paste0("distance_pca100_", c("scaled_data", "pks", "tic", "rms", "max"))
+))
+
+
+
+```
+Se aplica la clusterización DBSCAN tras la reducción de la dimensionalidad por PCA4: 
+  
+  ```{r}
+tiempo_DBSCAM_PCA4 <- system.time({
+  
+  minPts <- 8
+  
+
+  # Abrir archivo PNG para el gráfico de la PCA TIC
+  png("KNN_distplot_PCA4_prueba_TIC.png")
+  # Generar el gráfico para los datos de PCA TIC (solo la primera componente)
+  kNNdistplot(as.matrix(pca4_TIC$call$X[,1:1]), k = minPts - 1, minPts = minPts)
+  # Agregar un título al gráfico
+  title(main = "KNN Distplot - PCA4 TIC")
+  dev.off()  # Cerrar el dispositivo gráfico (guardar el gráfico en el PNG)
+  
+  # Abrir archivo PNG para el gráfico de la PCA RMS
+  png("KNN_distplot_PCA4_prueba_RMS.png")
+  # Generar el gráfico para los datos de PCA RMS (primeras 4 componentes)
+  kNNdistplot(as.matrix(pca4_RMS$call$X[,1:4]), k = minPts - 1, minPts = minPts)
+  # Agregar un título al gráfico
+  title(main = "KNN Distplot - PCA4 RMS")
+  dev.off()  # Cerrar el dispositivo gráfico (guardar el gráfico en el PNG)
+  
+  # Abrir archivo PNG para el gráfico de la PCA MAX
+  png("KNN_distplot_PCA4_prueba_MAX.png")
+  # Generar el gráfico para los datos de PCA MAX (primeras 4 componentes)
+  kNNdistplot(as.matrix(pca4_MAX$call$X[,1:4]), k = minPts - 1, minPts = minPts)
+  # Agregar un título al gráfico
+  title(main = "KNN Distplot - PCA4 MAX")
+  dev.off()  # Cerrar el dispositivo gráfico (guardar el gráfico en el PNG)
+  
+  # Abrir archivo PNG para el gráfico de la PCA pks
+  png("KNN_distplot_PCA4_prueba_pks.png")
+  # Generar el gráfico para los datos de PCA pks (primeras 4 componentes)
+  kNNdistplot(as.matrix(pca4_pks$call$X[,1:4]), k = minPts - 1, minPts = minPts)
+  # Agregar un título al gráfico
+  title(main = "KNN Distplot - PCA4 pks")
+  dev.off()
+  
+  # Valores de eps según el análisis KNN para los datos PCA
+  
+  eps_PCA4_TIC <- 0.015
+  eps_PCA4_RMS <- 0.001
+  eps_PCA4_MAX <- 0.01
+  eps_PCA4_pks <- 100
+  
+  # Ejecutar la función frNN para cada conjunto de datos PCA
+  frNN_PCA4_TIC_prueba <- frNN(as.matrix(pca4_TIC$call$X[,1:1]), eps_PCA4_TIC, sort = TRUE, search = "kdtree", bucketSize = 10, splitRule = "suggest", approx = 0)
+  frNN_PCA4_RMS_prueba <- frNN(as.matrix(pca4_RMS$call$X[,1:4]), eps_PCA4_RMS, sort = TRUE, search = "kdtree", bucketSize = 10, splitRule = "suggest", approx = 0)
+  frNN_PCA4_MAX_prueba <- frNN(as.matrix(pca4_MAX$call$X[,1:4]), eps_PCA4_MAX, sort = TRUE, search = "kdtree", bucketSize = 10, splitRule = "suggest", approx = 0)
+  frNN_PCA4_pks_prueba <- frNN(as.matrix(pca4_pks$call$X[,1:4]), eps_PCA4_pks, sort = TRUE, search = "kdtree", bucketSize = 10, splitRule = "suggest", approx = 0)
+  
+  # Ejecutar el algoritmo DBSCAN para cada conjunto de datos PCA
+  dbscan_PCA4_TIC <- dbscan(frNN_PCA4_TIC_prueba, minPts = minPts)
+  dbscan_PCA4_RMS <- dbscan(frNN_PCA4_RMS_prueba, minPts = minPts)
+  dbscan_PCA4_MAX <- dbscan(frNN_PCA4_MAX_prueba, minPts = minPts)
+  dbscan_PCA4_pks <- dbscan(frNN_PCA4_pks_prueba, minPts = minPts)
+  
+  
+  # Función para generar gráficos de clusters
+  plot_clusters <- function(coords, dbscan_result, title) {
+    df <- data.frame(coords,
+                     cluster = as.factor(dbscan_result$cluster))  # Convertir clusters a factor
+    
+    ggplot(df, aes(x = x, y = y, color = cluster)) +
+      geom_point(size = 1.5, alpha = 0.7) +  # Puntos con transparencia
+      scale_color_manual(values = c("black", rainbow(length(unique(dbscan_result$cluster)) - 1))) + 
+      labs(title = title, color = "Cluster") +
+      theme_minimal()
+  }
+  
+  # Crear archivo PDF para los resultados de DBSCAN con PCA
+  pdf("Clusters_DBSCAN_PCA4_epsilon_15_0.015_0.015_0.2_1000_and_minPts_prueba_400.pdf")
+  
+  # Graficar cada conjunto de datos PCA
+  print(plot_clusters(pks$pos, dbscan_PCA4_TIC, "Clusters DBSCAN - PCA4 TIC"))
+  print(plot_clusters(pks$pos, dbscan_PCA4_RMS, "Clusters DBSCAN - PCA4 RMS"))
+  print(plot_clusters(pks$pos, dbscan_PCA4_MAX, "Clusters DBSCAN - PCA4 MAX"))
+  print(plot_clusters(pks$pos, dbscan_PCA4_pks, "Clusters DBSCAN - PCA4 pks"))
+  
+  
+  # Cerrar archivo PDF
+  dev.off() })
+
+cat("Tiempo total de ejecución DBSCAM-PCA4:", tiempo_DBSCAM_PCA4 [3], "segundos\n")
+
+rm(list = c("minPts", 
+            paste0("eps_PCA4_", c("scaled", "TIC", "RMS", "MAX", "pks")),
+            paste0("frNN_PCA4_", c("scaled", "TIC", "RMS", "MAX", "pks")),
+            "plot_clusters"))
+
+```
+
+#Se aplica la clusterización DBSCAN tras la reducción de la dimensionalidad PCA100: 
+tiempo_DBSCAM_PCA100 <- system.time({
+  minPts <- 400
+  
+  # Abrir archivo PNG para el gráfico de la PCA TIC
+  png("KNN_distplot_PCA100_TIC.png")
+  # Generar el gráfico para los datos de PCA TIC (solo la primera componente)
+  kNNdistplot(as.matrix(pca100_TIC$call$X[,1:1]), k = minPts - 1, minPts = minPts)
+  # Agregar un título al gráfico
+  title(main = "KNN Distplot - PCA100 TIC")
+  dev.off()  # Cerrar el dispositivo gráfico (guardar el gráfico en el PNG)
+  
+  # Abrir archivo PNG para el gráfico de la PCA RMS
+  png("KNN_distplot_PCA100_RMS.png")
+  # Generar el gráfico para los datos de PCA RMS (primeras 100 componentes)
+  kNNdistplot(as.matrix(pca100_RMS$call$X[,1:100]), k = minPts - 1, minPts = minPts)
+  # Agregar un título al gráfico
+  title(main = "KNN Distplot - PCA100 RMS")
+  dev.off()  # Cerrar el dispositivo gráfico (guardar el gráfico en el PNG)
+  
+  # Abrir archivo PNG para el gráfico de la PCA MAX
+  png("KNN_distplot_PCA100_MAX.png")
+  # Generar el gráfico para los datos de PCA MAX (primeras 100 componentes)
+  kNNdistplot(as.matrix(pca100_MAX$call$X[,1:100]), k = minPts - 1, minPts = minPts)
+  # Agregar un título al gráfico
+  title(main = "KNN Distplot - PCA100 MAX")
+  dev.off()  # Cerrar el dispositivo gráfico (guardar el gráfico en el PNG)
+  
+  # Abrir archivo PNG para el gráfico de la PCA pks
+  png("KNN_distplot_PCA100_pks.png")
+  # Generar el gráfico para los datos de PCA pks (primeras 100 componentes)
+  kNNdistplot(as.matrix(pca100_pks$call$X[,1:100]), k = minPts - 1, minPts = minPts)
+  # Agregar un título al gráfico
+  title(main = "KNN Distplot - PCA100 pks")
+  dev.off()
+  
+  # Valores de eps según el análisis KNN para los datos PCA
+  eps_PCA100_scaled <- 40
+  eps_PCA100_TIC <- 0.015
+  eps_PCA100_RMS <- 0.22
+  eps_PCA100_MAX <- 0.2
+  eps_PCA100_pks <- 1000
+  
+  # Ejecutar la función frNN para cada conjunto de datos PCA
+  frNN_PCA100_TIC <- frNN(as.matrix(pca100_TIC$call$X[,1:1]), eps_PCA100_TIC, sort = TRUE, search = "kdtree", bucketSize = 10, splitRule = "suggest", approx = 0)
+  frNN_PCA100_RMS <- frNN(as.matrix(pca100_RMS$call$X[,1:100]), eps_PCA100_RMS, sort = TRUE, search = "kdtree", bucketSize = 10, splitRule = "suggest", approx = 0)
+  frNN_PCA100_MAX <- frNN(as.matrix(pca100_MAX$call$X[,1:100]), eps_PCA100_MAX, sort = TRUE, search = "kdtree", bucketSize = 10, splitRule = "suggest", approx = 0)
+  frNN_PCA100_pks <- frNN(as.matrix(pca100_pks$call$X[,1:100]), eps_PCA100_pks, sort = TRUE, search = "kdtree", bucketSize = 10, splitRule = "suggest", approx = 0)
+  
+  # Ejecutar el algoritmo DBSCAN para cada conjunto de datos PCA
+  dbscan_PCA100_TIC <- dbscan(frNN_PCA100_TIC, minPts = minPts)
+  dbscan_PCA100_RMS <- dbscan(frNN_PCA100_RMS, minPts = minPts)
+  dbscan_PCA100_MAX <- dbscan(frNN_PCA100_MAX, minPts = minPts)
+  dbscan_PCA100_pks <- dbscan(frNN_PCA100_pks, minPts = minPts)
+  
+  # Función para generar gráficos de clusters
+  plot_clusters <- function(coords, dbscan_result, title) {
+    df <- data.frame(coords,
+                     cluster = as.factor(dbscan_result$cluster))  # Convertir clusters a factor
+    
+    ggplot(df, aes(x = x, y = y, color = cluster)) +
+      geom_point(size = 1.5, alpha = 0.7) +  # Puntos con transparencia
+      scale_color_manual(values = c("black", rainbow(length(unique(dbscan_result$cluster)) - 1))) + 
+      labs(title = title, color = "Cluster") +
+      theme_minimal()
+  }
+  
+  # Crear archivo PDF para los resultados de DBSCAN con PCA
+  pdf("Clusters_DBSCAN_PCA100_epsilon_15_0.015_0.015_0.2_1000_and_minPts_400.pdf")
+  
+  # Graficar cada conjunto de datos PCA
+  print(plot_clusters(pks$pos, dbscan_PCA100_TIC, "Clusters DBSCAN - PCA100 TIC"))
+  print(plot_clusters(pks$pos, dbscan_PCA100_RMS, "Clusters DBSCAN - PCA100 RMS"))
+  print(plot_clusters(pks$pos, dbscan_PCA100_MAX, "Clusters DBSCAN - PCA100 MAX"))
+  print(plot_clusters(pks$pos, dbscan_PCA100_pks, "Clusters DBSCAN - PCA100 pks"))
+  
+  # Cerrar archivo PDF
+  dev.off() })
+
+cat("Tiempo total de ejecución DBSCAM-PCA100:", tiempo_DBSCAM_PCA100 [3], "segundos\n")
+rm(list = c("minPts", 
+            paste0("eps_PCA100_", c("scaled", "TIC", "RMS", "MAX", "pks")),
+            paste0("frNN_PCA100_", c("scaled", "TIC", "RMS", "MAX", "pks")),
+            "plot_clusters"))
+
+rm(list = c("pca4_TIC", "pca4_RMS", "pca4_MAX", "pca4_scaled_data", "pca4_pks",
+            "pca100_TIC", "pca100_RMS", "pca100_MAX", "pca100_scaled_data", "pca100_pks"))rm(list = c("pca4_TIC", "pca4_RMS", "pca4_MAX", "pca4_scaled_data", "pca4_pks",
+                                                                                                      "pca100_TIC", "pca100_RMS", "pca100_MAX", "pca100_scaled_data", "pca100_pks"))
+
+save.image(file = "NR_PCA4_PCA100_OBJECTS.RData")
+
+```
+Aplicación de la clusterización KMEANS tras la reducción por RTSNE2. 
+
+```{r}
+
+
+tiempo_RTSNE2 <- system.time({
+  pks_rtsne2 <- Rtsne(scaled_data, dims = 2, perplexity = 30, theta = 0.5, max_iter = 1000)
+  TIC_rtsne2 <- Rtsne(scale(normalized_data_TIC), dims = 2, perplexity = 30, theta = 0.5, max_iter = 9000)
+  RMS_rtsne2 <- Rtsne(scale(normalized_data_RMS), dims = 2, perplexity = 30, theta = 0.5, max_iter = 9000)
+  MAX_rtsne2 <- Rtsne(scale(normalized_data_MAX), dims = 2, perplexity = 30, theta = 0.5, max_iter = 9000) })
+
+
+
+tiempo_KMEANS_RTSNE2 <- system.time({
+  set.seed(111) # Lo hace reproducible
+  
+  # Clustering con k-means para diferentes configuraciones
+  set.seed(111)
+  pks_rtsne2_KMeans_k4 <- kmeans(pks_rtsne2$Y, centers = 4)
+  set.seed(111)
+  pks_rtsne2_KMeans_k7 <- kmeans(pks_rtsne2$Y, centers = 7)
+  set.seed(111)
+  pks_rtsne2_KMeans_k8 <- kmeans(pks_rtsne2$Y, centers = 8)
+  set.seed(111)
+  TIC_rtsne2_KMeans_k4 <- kmeans(TIC_rtsne2$Y, centers = 4)
+  set.seed(111)
+  TIC_rtsne2_KMeans_k7 <- kmeans(TIC_rtsne2$Y, centers = 7)
+  set.seed(111)
+  TIC_rtsne2_KMeans_k8 <- kmeans(TIC_rtsne2$Y, centers = 8)
+  set.seed(111)
+  RMS_rtsne2_KMeans_k4 <- kmeans(RMS_rtsne2$Y, centers = 4)
+  set.seed(111)
+  RMS_rtsne2_KMeans_k7 <- kmeans(RMS_rtsne2$Y, centers = 7)
+  set.seed(111)
+  RMS_rtsne2_KMeans_k8 <- kmeans(RMS_rtsne2$Y, centers = 8)
+  set.seed(111)
+  MAX_rtsne2_KMeans_k4 <- kmeans(MAX_rtsne2$Y, centers = 4)
+  set.seed(111)
+  MAX_rtsne2_KMeans_k7 <- kmeans(MAX_rtsne2$Y, centers = 7)
+  set.seed(111)
+  MAX_rtsne2_KMeans_k8 <- kmeans(MAX_rtsne2$Y, centers = 8)
+  
+  # Colores para los clusters
+  cluster_colors_4_rtsne2 <- viridis::viridis(4, option = "plasma")
+  cluster_colors_7_rtsne2 <- viridis::viridis(7, option = "plasma")
+  cluster_colors_8_rtsne2 <- viridis::viridis(8, option = "plasma")
+  
+  # Creación de dataframes y gráficos para cada configuración
+  df_nr_1_rtsne2 <- data.frame(pks$pos, cluster_1_rtsne2 = as.factor(pks_rtsne2_KMeans_k4$cluster))
+  plot_pks_rtsne2_KMeans_k4 <- ggplot(df_nr_1_rtsne2, aes(x = x, y = y, fill = cluster_1_rtsne2)) + 
+    geom_tile() + 
+    scale_fill_manual(values = cluster_colors_4_rtsne2) + 
+    labs(fill = "Clusters", title = "Cluster analysis pks-rtsne2 with 4 Clusters") +
+    theme_minimal()
+  
+  df_nr_2_rtsne2 <- data.frame(pks$pos, cluster_2_rtsne2 = as.factor(pks_rtsne2_KMeans_k7$cluster))
+  plot_pks_rtsne2_KMeans_k7 <- ggplot(df_nr_2_rtsne2, aes(x = x, y = y, fill = cluster_2_rtsne2)) + 
+    geom_tile() + 
+    scale_fill_manual(values = cluster_colors_7_rtsne2) + 
+    labs(fill = "Clusters", title = "Cluster analysis pks-rtsne2 with 7 Clusters") +
+    theme_minimal()
+  
+  df_nr_3_rtsne2 <- data.frame(pks$pos, cluster_3_rtsne2 = as.factor(pks_rtsne2_KMeans_k8$cluster))
+  plot_pks_rtsne2_KMeans_k8 <- ggplot(df_nr_3_rtsne2, aes(x = x, y = y, fill = cluster_3_rtsne2)) + 
+    geom_tile() + 
+    scale_fill_manual(values = cluster_colors_8_rtsne2) + 
+    labs(fill = "Clusters", title = "Cluster analysis pks-rtsne2 with 8 Clusters") +
+    theme_minimal()
+  
+  df_nr_7_rtsne2 <- data.frame(pks$pos, cluster_7_rtsne2 = as.factor(TIC_rtsne2_KMeans_k4$cluster))
+  plot_TIC_rtsne2_KMeans_k4 <- ggplot(df_nr_7_rtsne2, aes(x = x, y = y, fill = cluster_7_rtsne2)) + 
+    geom_tile() + 
+    scale_fill_manual(values = cluster_colors_4_rtsne2) + 
+    labs(fill = "Clusters", title = "Cluster analysis TIC-rtsne2 with 4 Clusters") +
+    theme_minimal()
+  
+  df_nr_8_rtsne2 <- data.frame(pks$pos, cluster_8_rtsne2 = as.factor(TIC_rtsne2_KMeans_k7$cluster))
+  plot_TIC_rtsne2_KMeans_k7 <- ggplot(df_nr_8_rtsne2, aes(x = x, y = y, fill = cluster_8_rtsne2)) + 
+    geom_tile() + 
+    scale_fill_manual(values = cluster_colors_7_rtsne2) + 
+    labs(fill = "Clusters", title = "Cluster analysis TIC-rtsne2 with 7 Clusters") +
+    theme_minimal()
+  
+  df_nr_9_rtsne2 <- data.frame(pks$pos, cluster_9_rtsne2 = as.factor(TIC_rtsne2_KMeans_k8$cluster))
+  plot_TIC_rtsne2_KMeans_k8 <- ggplot(df_nr_9_rtsne2, aes(x = x, y = y, fill = cluster_9_rtsne2)) + 
+    geom_tile() + 
+    scale_fill_manual(values = cluster_colors_8_rtsne2) + 
+    labs(fill = "Clusters", title = "Cluster analysis TIC-rtsne2 with 8 Clusters") +
+    theme_minimal()
+  
+  df_nr_10_rtsne2 <- data.frame(pks$pos, cluster_10_rtsne2 = as.factor(RMS_rtsne2_KMeans_k4$cluster))
+  plot_RMS_rtsne2_KMeans_k4 <- ggplot(df_nr_10_rtsne2, aes(x = x, y = y, fill = cluster_10_rtsne2)) + 
+    geom_tile() + 
+    scale_fill_manual(values = cluster_colors_4_rtsne2) + 
+    labs(fill = "Clusters", title = "Cluster analysis RMS-rtsne2 with 4 Clusters") +
+    theme_minimal()
+  
+  df_nr_11_rtsne2 <- data.frame(pks$pos, cluster_11_rtsne2 = as.factor(RMS_rtsne2_KMeans_k7$cluster))
+  plot_RMS_rtsne2_KMeans_k7 <- ggplot(df_nr_11_rtsne2, aes(x = x, y = y, fill = cluster_11_rtsne2)) + 
+    geom_tile() + 
+    scale_fill_manual(values = cluster_colors_7_rtsne2) + 
+    labs(fill = "Clusters", title = "Cluster analysis RMS-rtsne2 with 7 Clusters") +
+    theme_minimal()
+  
+  df_nr_12_rtsne2 <- data.frame(pks$pos, cluster_12_rtsne2 = as.factor(RMS_rtsne2_KMeans_k8$cluster))
+  plot_RMS_rtsne2_KMeans_k8 <- ggplot(df_nr_12_rtsne2, aes(x = x, y = y, fill = cluster_12_rtsne2)) + 
+    geom_tile() + 
+    scale_fill_manual(values = cluster_colors_8_rtsne2) + 
+    labs(fill = "Clusters", title = "Cluster analysis RMS-rtsne2 with 8 Clusters") +
+    theme_minimal()
+  
+  df_nr_13_rtsne2 <- data.frame(pks$pos, cluster_13_rtsne2 = as.factor(MAX_rtsne2_KMeans_k4$cluster))
+  plot_MAX_rtsne2_KMeans_k4 <- ggplot(df_nr_13_rtsne2, aes(x = x, y = y, fill = cluster_13_rtsne2)) + 
+    geom_tile() + 
+    scale_fill_manual(values = cluster_colors_4_rtsne2) + 
+    labs(fill = "Clusters", title = "Cluster analysis MAX-rtsne2 with 4 Clusters") +
+    theme_minimal()
+  
+  df_nr_14_rtsne2 <- data.frame(pks$pos, cluster_14_rtsne2 = as.factor(MAX_rtsne2_KMeans_k7$cluster))
+  plot_MAX_rtsne2_KMeans_k7 <- ggplot(df_nr_14_rtsne2, aes(x = x, y = y, fill = cluster_14_rtsne2)) + 
+    geom_tile() + 
+    scale_fill_manual(values = cluster_colors_7_rtsne2) + 
+    labs(fill = "Clusters", title = "Cluster analysis MAX-rtsne2 with 7 Clusters") +
+    theme_minimal()
+  
+  df_nr_15_rtsne2 <- data.frame(pks$pos, cluster_15_rtsne2 = as.factor(MAX_rtsne2_KMeans_k8$cluster))
+  plot_MAX_rtsne2_KMeans_k8 <- ggplot(df_nr_15_rtsne2, aes(x = x, y = y, fill = cluster_15_rtsne2)) + 
+    geom_tile() + 
+    scale_fill_manual(values = cluster_colors_8_rtsne2) + 
+    labs(fill = "Clusters", title = "Cluster analysis MAX-rtsne2 with 8 Clusters") +
+    theme_minimal()
+  
+  pdf("kmeans_rtsne2_K4,7,8_TFG_AM.pdf")
+  
+  print(plot_pks_rtsne2_KMeans_k4)
+  print(plot_pks_rtsne2_KMeans_k7)
+  print(plot_pks_rtsne2_KMeans_k8)
+  print(plot_TIC_rtsne2_KMeans_k4)
+  print(plot_TIC_rtsne2_KMeans_k7)
+  print(plot_TIC_rtsne2_KMeans_k8)
+  print(plot_RMS_rtsne2_KMeans_k4)
+  print(plot_RMS_rtsne2_KMeans_k7)
+  print(plot_RMS_rtsne2_KMeans_k8) 
+  print(plot_MAX_rtsne2_KMeans_k4)
+  print(plot_MAX_rtsne2_KMeans_k7)
+  print(plot_MAX_rtsne2_KMeans_k8)
+  
+  dev.off()
+})
+
+cat("Tiempo total de ejecución KMEANS-RTSNE2:", tiempo_KMEANS_RTSNE2 [3], "segundos\n")
+cat("Tiempo total de ejecución KMEANS-RTSNE2:", tiempo_KMEANS_RTSNE2 [3], "segundos\n")
+rm(list = c(paste0("df_nr_", 1:15, "_rtsne2"),
+            paste0("plot_", c("pks", "scaled", "TIC", "RMS", "MAX"), "_rtsne2_kMeans_k", c(4,7,8)),
+            paste0("cluster_colors_", c(4,7,8), "_rtsne2")))
+
+```
+Aplicación de KMEANS tras la reducción por RTSNE3: 
+  
+  ```{r}
+
+
+tiempo_RTSNE3 <- system.time({
+  
+  TIC_rtsne3 <- Rtsne(scale(normalized_data_TIC), dims = 3, perplexity = 30, theta = 0.5, max_iter = 9000)
+  RMS_rtsne3 <- Rtsne(scale(normalized_data_RMS), dims = 3, perplexity = 30, theta = 0.5, max_iter = 9000)
+  MAX_rtsne3 <- Rtsne(scale(normalized_data_MAX), dims = 3, perplexity = 30, theta = 0.5, max_iter = 9000) })
+
+tiempo_KMEANS_RTSNE3 <- system.time({
+  set.seed(111) #Lo hace reproducible
+  pks_rtsne3_KMeans_k4 <- kmeans(pks_rtsne3$Y, centers = 4)
+  set.seed(111)
+  pks_rtsne3_KMeans_k7 <- kmeans(pks_rtsne3$Y, centers = 7)
+  set.seed(111)
+  pks_rtsne3_KMeans_k8 <- kmeans(pks_rtsne3$Y, centers = 8)
+  set.seed(111)
+  TIC_rtsne3_KMeans_k4 <- kmeans(TIC_rtsne3$Y, centers = 4)
+  set.seed(111)
+  TIC_rtsne3_KMeans_k7 <- kmeans(TIC_rtsne3$Y, centers = 7)
+  set.seed(111)
+  TIC_rtsne3_KMeans_k8 <- kmeans(TIC_rtsne3$Y, centers = 8)
+  set.seed(111)
+  RMS_rtsne3_KMeans_k4 <- kmeans(RMS_rtsne3$Y, centers = 4)
+  set.seed(111)
+  RMS_rtsne3_KMeans_k7 <- kmeans(RMS_rtsne3$Y, centers = 7)
+  set.seed(111)
+  RMS_rtsne3_KMeans_k8 <- kmeans(RMS_rtsne3$Y, centers = 8)
+  set.seed(111)
+  MAX_rtsne3_KMeans_k4 <- kmeans(MAX_rtsne3$Y, centers = 4)
+  set.seed(111)
+  MAX_rtsne3_KMeans_k7 <- kmeans(MAX_rtsne3$Y, centers = 7)
+  set.seed(111)
+  MAX_rtsne3_KMeans_k8 <- kmeans(MAX_rtsne3$Y, centers = 8)
+  
+  cluster_colors_4_rtsne3 <- viridis::viridis(4, option = "plasma")
+  cluster_colors_7_rtsne3 <- viridis::viridis(7, option = "plasma")
+  cluster_colors_8_rtsne3 <- viridis::viridis(8, option = "plasma")
+  
+  df_nr_1_rtsne3 <- data.frame(pks$pos, cluster_1_rtsne3 = as.factor(pks_rtsne3_KMeans_k4$cluster))
+  plot_pks_rtsne3_KMeans_k4 <- ggplot(df_nr_1_rtsne3, aes(x = x, y = y, fill = cluster_1_rtsne3)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_4_rtsne3) + 
+    labs(fill = "Clusters", title = "Cluster analysis pks-rtsne3 with 4 Cluster") +
+    theme_minimal()
+  
+  df_nr_2_rtsne3 <- data.frame(pks$pos, cluster_2_rtsne3 = as.factor(pks_rtsne3_KMeans_k7$cluster))
+  plot_pks_rtsne3_KMeans_k7 <- ggplot(df_nr_2_rtsne3, aes(x = x, y = y, fill = cluster_2_rtsne3)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_7_rtsne3) + 
+    labs(fill = "Clusters", title = "Cluster analysis pks-rtsne3 with 7 Cluster") +
+    theme_minimal()
+  
+  df_nr_3_rtsne3 <- data.frame(pks$pos, cluster_3_rtsne3 = as.factor(pks_rtsne3_KMeans_k8$cluster))
+  plot_pks_rtsne3_KMeans_k8 <- ggplot(df_nr_3_rtsne3, aes(x = x, y = y, fill = cluster_3_rtsne3)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_8_rtsne3) + 
+    labs(fill = "Clusters", title = "Cluster analysis pks-rtsne3 with 8 Cluster") +
+    theme_minimal()
+  
+  df_nr_7_rtsne3 <- data.frame(pks$pos, cluster_7_rtsne3 = as.factor(TIC_rtsne3_KMeans_k4$cluster))
+  plot_TIC_rtsne3_KMeans_k4 <- ggplot(df_nr_7_rtsne3, aes(x = x, y = y, fill = cluster_7_rtsne3)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_4_rtsne3) + 
+    labs(fill = "Clusters", title = "Cluster analysis TIC-rtsne3 with 4 Cluster") +
+    theme_minimal()
+  
+  df_nr_8_rtsne3 <- data.frame(pks$pos, cluster_8_rtsne3 = as.factor(TIC_rtsne3_KMeans_k7$cluster))
+  plot_TIC_rtsne3_KMeans_k7 <- ggplot(df_nr_8_rtsne3, aes(x = x, y = y, fill = cluster_8_rtsne3)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_7_rtsne3) + 
+    labs(fill = "Clusters", title = "Cluster analysis TIC-rtsne3 with 7 Cluster") +
+    theme_minimal()
+  
+  df_nr_9_rtsne3 <- data.frame(pks$pos, cluster_9_rtsne3 = as.factor(TIC_rtsne3_KMeans_k8$cluster))
+  plot_TIC_rtsne3_KMeans_k8 <- ggplot(df_nr_9_rtsne3, aes(x = x, y = y, fill = cluster_9_rtsne3)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_8_rtsne3) + 
+    labs(fill = "Clusters", title = "Cluster analysis TIC-rtsne3 with 8 Cluster") +
+    theme_minimal()
+  
+  df_nr_10_rtsne3 <- data.frame(pks$pos, cluster_10_rtsne3 = as.factor(RMS_rtsne3_KMeans_k4$cluster))
+  plot_RMS_rtsne3_KMeans_k4 <- ggplot(df_nr_10_rtsne3, aes(x = x, y = y, fill = cluster_10_rtsne3)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_4_rtsne3) + 
+    labs(fill = "Clusters", title = "Cluster analysis RMS-rtsne3 with 4 Cluster") +
+    theme_minimal()
+  
+  df_nr_11_rtsne3 <- data.frame(pks$pos, cluster_11_rtsne3 = as.factor(RMS_rtsne3_KMeans_k7$cluster))
+  plot_RMS_rtsne3_KMeans_k7 <- ggplot(df_nr_11_rtsne3, aes(x = x, y = y, fill = cluster_11_rtsne3)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_7_rtsne3) + 
+    labs(fill = "Clusters", title = "Cluster analysis RMS-rtsne3 with 7 Cluster") +
+    theme_minimal()
+  
+  df_nr_12_rtsne3 <- data.frame(pks$pos, cluster_12_rtsne3 = as.factor(RMS_rtsne3_KMeans_k8$cluster))
+  plot_RMS_rtsne3_KMeans_k8 <- ggplot(df_nr_12_rtsne3, aes(x = x, y = y, fill = cluster_12_rtsne3)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_8_rtsne3) + 
+    labs(fill = "Clusters", title = "Cluster analysis RMS-rtsne3 with 8 Cluster") +
+    theme_minimal()
+  
+  df_nr_13_rtsne3 <- data.frame(pks$pos, cluster_13_rtsne3 = as.factor(MAX_rtsne3_KMeans_k4$cluster))
+  plot_MAX_rtsne3_KMeans_k4 <- ggplot(df_nr_13_rtsne3, aes(x = x, y = y, fill = cluster_13_rtsne3)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_4_rtsne3) + 
+    labs(fill = "Clusters", title = "Cluster analysis MAX-rtsne3 with 4 Cluster") +
+    theme_minimal()
+  
+  df_nr_14_rtsne3 <- data.frame(pks$pos, cluster_14_rtsne3 = as.factor(MAX_rtsne3_KMeans_k7$cluster))
+  plot_MAX_rtsne3_KMeans_k7 <- ggplot(df_nr_14_rtsne3, aes(x = x, y = y, fill = cluster_14_rtsne3)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_7_rtsne3) + 
+    labs(fill = "Clusters", title = "Cluster analysis MAX-rtsne3 with 7 Cluster") +
+    theme_minimal()
+  
+  df_nr_15_rtsne3 <- data.frame(pks$pos, cluster_15_rtsne3 = as.factor(MAX_rtsne3_KMeans_k8$cluster))
+  plot_MAX_rtsne3_KMeans_k8 <- ggplot(df_nr_15_rtsne3, aes(x = x, y = y, fill = cluster_15_rtsne3)) + 
+    geom_raster() + 
+    scale_fill_manual(values = cluster_colors_8_rtsne3) + 
+    labs(fill = "Clusters", title = "Cluster analysis MAX-rtsne3 with 8 Cluster") +
+    theme_minimal()
+  
+  pdf("kmeans_rtsne3_K4,7,8_TFG_AM.pdf")
+  
+  print(plot_pks_rtsne3_KMeans_k4)
+  print(plot_pks_rtsne3_KMeans_k7)
+  print(plot_pks_rtsne3_KMeans_k8)
+  print(plot_TIC_rtsne3_KMeans_k4)
+  print(plot_TIC_rtsne3_KMeans_k7)
+  print(plot_TIC_rtsne3_KMeans_k8)
+  print(plot_RMS_rtsne3_KMeans_k4)
+  print(plot_RMS_rtsne3_KMeans_k7)
+  print(plot_RMS_rtsne3_KMeans_k8) 
+  print(plot_MAX_rtsne3_KMeans_k4)
+  print(plot_MAX_rtsne3_KMeans_k7)
+  print(plot_MAX_rtsne3_KMeans_k8)
+  
+  dev.off()
+})
+
+cat("Tiempo total de ejecución KMEANS-RTSNE3:", tiempo_KMEANS_RTSNE3[3], "segundos\n")
+
+rm(list = c(paste0("df_nr_", 1:15, "_rtsne3"),
+            paste0("plot_", c("pks", "scaled", "TIC", "RMS", "MAX"), "_rtsne3_kMeans_k", c(4,7,8)),
+            paste0("cluster_colors_", c(4,7,8), "_rtsne3")))
+
+
+```
+
+Aplicación del método jerarquico (HC) tras la reducción de la dimensionalidad por RTSNE2: 
+  
+  ```{r}
+tiempo_HC_RTSNE2 <- system.time({
+  
+  # Método jerárquico para los RTSNE2_pks
+  distance_rtsne2_pks <- dist(pks_rtsne2$Y, method = "euclidean")
+  hclust_rtsne2_pks <- fastcluster::hclust(distance_rtsne2_pks, method = "complete")
+  
+  hgroups_rtsne2_pks_4 <- cutree(hclust_rtsne2_pks, k = 4)
+  hgroups_rtsne2_pks_7 <- cutree(hclust_rtsne2_pks, k = 7)
+  hgroups_rtsne2_pks_8 <- cutree(hclust_rtsne2_pks, k = 8)
+  
+  clustering_rtsne2_pks_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne2_pks_4))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE2 pks k=4") + theme_light()
+  clustering_rtsne2_pks_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne2_pks_7))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE2 pks k=7") + theme_light()
+  clustering_rtsne2_pks_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne2_pks_8))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE2 pks k=8") + theme_light()
+  
+  # Método jerárquico para los RTSNE2_TIC
+  distance_rtsne2_tic <- dist(TIC_rtsne2$Y, method = "euclidean")
+  hclust_rtsne2_tic <- fastcluster::hclust(distance_rtsne2_tic, method = "complete")
+  
+  hgroups_rtsne2_tic_4 <- cutree(hclust_rtsne2_tic, k = 4)
+  hgroups_rtsne2_tic_7 <- cutree(hclust_rtsne2_tic, k = 7)
+  hgroups_rtsne2_tic_8 <- cutree(hclust_rtsne2_tic, k = 8)
+  
+  clustering_rtsne2_tic_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne2_tic_4))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE2 TIC k=4") + theme_light()
+  clustering_rtsne2_tic_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne2_tic_7))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE2 TIC k=7") + theme_light()
+  clustering_rtsne2_tic_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne2_tic_8))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE2 TIC k=8") + theme_light()
+  
+  # Método jerárquico para los RTSNE2_RMS
+  distance_rtsne2_rms <- dist(RMS_rtsne2$Y, method = "euclidean")
+  hclust_rtsne2_rms <- fastcluster::hclust(distance_rtsne2_rms, method = "complete")
+  
+  hgroups_rtsne2_rms_4 <- cutree(hclust_rtsne2_rms, k = 4)
+  hgroups_rtsne2_rms_7 <- cutree(hclust_rtsne2_rms, k = 7)
+  hgroups_rtsne2_rms_8 <- cutree(hclust_rtsne2_rms, k = 8)
+  
+  clustering_rtsne2_rms_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne2_rms_4))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE2 RMS k=4") + theme_light()
+  clustering_rtsne2_rms_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne2_rms_7))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE2 RMS k=7") + theme_light()
+  clustering_rtsne2_rms_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne2_rms_8))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE2 RMS k=8") + theme_light()
+  
+  # Método jerárquico para los RTSNE2_MAX
+  distance_rtsne2_max <- dist(MAX_rtsne2$Y, method = "euclidean")
+  hclust_rtsne2_max <- fastcluster::hclust(distance_rtsne2_max, method = "complete")
+  
+  hgroups_rtsne2_max_4 <- cutree(hclust_rtsne2_max, k = 4)
+  hgroups_rtsne2_max_7 <- cutree(hclust_rtsne2_max, k = 7)
+  hgroups_rtsne2_max_8 <- cutree(hclust_rtsne2_max, k = 8)
+  
+  clustering_rtsne2_max_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne2_max_4))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE2 MAX k=4") + theme_light()
+  clustering_rtsne2_max_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne2_max_7))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE2 MAX k=7") + theme_light()
+  clustering_rtsne2_max_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne2_max_8))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE2 MAX k=8") + theme_light()
+  
+  pdf("HC_rtsne2_K4,7,8_TFG_AM.pdf")
+  print(clustering_rtsne2_pks_4)
+  print(clustering_rtsne2_pks_7)
+  print(clustering_rtsne2_pks_8)
+  print(clustering_rtsne2_tic_4)
+  print(clustering_rtsne2_tic_7)
+  print(clustering_rtsne2_tic_8)
+  print(clustering_rtsne2_rms_4)
+  print(clustering_rtsne2_rms_7)
+  print(clustering_rtsne2_rms_8)
+  print(clustering_rtsne2_max_4)
+  print(clustering_rtsne2_max_7)
+  print(clustering_rtsne2_max_8)
+  dev.off()
+  
+})
+
+cat("Tiempo total de ejecución HC-RTSNE2:", tiempo_HC_RTSNE2[3], "segundos\n")
+
+
+rm(list = c(
+  paste0("clustering_rtsne2_", c("scaled_data", "pks", "tic", "rms", "max"), "_", c(4,7,8)),
+  paste0("distance_rtsne2_", c("scaled_data", "pks", "tic", "rms", "max"))
+))
+```
+Aplicación del método jerarquico tras la reducción de la dimensionalidad por RTSNE3: 
+  
+  ```{r}
+tiempo_HC_RTSNE3 <- system.time({
+  
+  # Método jerárquico para los RTSNE3_pks
+  distance_rtsne3_pks <- dist(pks_rtsne3$Y, method = "euclidean")
+  hclust_rtsne3_pks <- fastcluster::hclust(distance_rtsne3_pks, method = "complete")
+  
+  hgroups_rtsne3_pks_4 <- cutree(hclust_rtsne3_pks, k = 4)
+  hgroups_rtsne3_pks_7 <- cutree(hclust_rtsne3_pks, k = 7)
+  hgroups_rtsne3_pks_8 <- cutree(hclust_rtsne3_pks, k = 8)
+  
+  clustering_rtsne3_pks_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne3_pks_4))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE3 pks k=4") + theme_light()
+  clustering_rtsne3_pks_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne3_pks_7))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE3 pks k=7") + theme_light()
+  clustering_rtsne3_pks_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne3_pks_8))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE3 pks k=8") + theme_light()
+  
+  # Método jerárquico para los RTSNE3_TIC
+  distance_rtsne3_tic <- dist(TIC_rtsne3$Y, method = "euclidean")
+  hclust_rtsne3_tic <- fastcluster::hclust(distance_rtsne3_tic, method = "complete")
+  
+  hgroups_rtsne3_tic_4 <- cutree(hclust_rtsne3_tic, k = 4)
+  hgroups_rtsne3_tic_7 <- cutree(hclust_rtsne3_tic, k = 7)
+  hgroups_rtsne3_tic_8 <- cutree(hclust_rtsne3_tic, k = 8)
+  
+  clustering_rtsne3_tic_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne3_tic_4))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE3 TIC k=4") + theme_light()
+  clustering_rtsne3_tic_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne3_tic_7))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE3 TIC k=7") + theme_light()
+  clustering_rtsne3_tic_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne3_tic_8))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE3 TIC k=8") + theme_light()
+  
+  # Método jerárquico para los RTSNE3_RMS
+  distance_rtsne3_rms <- dist(RMS_rtsne3$Y, method = "euclidean")
+  hclust_rtsne3_rms <- fastcluster::hclust(distance_rtsne3_rms, method = "complete")
+  
+  hgroups_rtsne3_rms_4 <- cutree(hclust_rtsne3_rms, k = 4)
+  hgroups_rtsne3_rms_7 <- cutree(hclust_rtsne3_rms, k = 7)
+  hgroups_rtsne3_rms_8 <- cutree(hclust_rtsne3_rms, k = 8)
+  
+  clustering_rtsne3_rms_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne3_rms_4))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE3 RMS k=4") + theme_light()
+  clustering_rtsne3_rms_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne3_rms_7))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE3 RMS k=7") + theme_light()
+  clustering_rtsne3_rms_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne3_rms_8))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE3 RMS k=8") + theme_light()
+  
+  # Método jerárquico para los RTSNE3_MAX
+  distance_rtsne3_max <- dist(MAX_rtsne3$Y, method = "euclidean")
+  hclust_rtsne3_max <- fastcluster::hclust(distance_rtsne3_max, method = "complete")
+  
+  hgroups_rtsne3_max_4 <- cutree(hclust_rtsne3_max, k = 4)
+  hgroups_rtsne3_max_7 <- cutree(hclust_rtsne3_max, k = 7)
+  hgroups_rtsne3_max_8 <- cutree(hclust_rtsne3_max, k = 8)
+  
+  clustering_rtsne3_max_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne3_max_4))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE3 MAX k=4") + theme_light()
+  clustering_rtsne3_max_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne3_max_7))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE3 MAX k=7") + theme_light()
+  clustering_rtsne3_max_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = factor(hgroups_rtsne3_max_8))) + 
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_RTSNE3 MAX k=8") + theme_light()
+  
+  pdf("HC_rtsne3_K4,7,8_TFG_AM.pdf")
+  print(clustering_rtsne3_pks_4)
+  print(clustering_rtsne3_pks_7)
+  print(clustering_rtsne3_pks_8)
+  print(clustering_rtsne3_tic_4)
+  print(clustering_rtsne3_tic_7)
+  print(clustering_rtsne3_tic_8)
+  print(clustering_rtsne3_rms_4)
+  print(clustering_rtsne3_rms_7)
+  print(clustering_rtsne3_rms_8)
+  print(clustering_rtsne3_max_4)
+  print(clustering_rtsne3_max_7)
+  print(clustering_rtsne3_max_8)
+  dev.off()
+  
+})
+
+cat("Tiempo total de ejecución HC-RTSNE3:", tiempo_HC_RTSNE3[3], "segundos\n")
+
+cat("Tiempo total de ejecución HC-RTSNE3:", tiempo_HC_RTSNE3 [3], "segundos\n")
+rm(list = c(
+  paste0("clustering_rtsne3_", c("scaled_data", "pks", "tic", "rms", "max"), "_", c(4,7,8)),
+  paste0("distance_rtsne3_", c("scaled_data", "pks", "tic", "rms", "max"))
+))
+
+```
+
+Aplicación de DBSCAN tras la reducción por RTSNE2: 
+  
+  ```{r}
+tiempo_DBSCAN_RTSNE2 <- system.time({
+  
+  # Asegúrate de que minPts esté definido antes de este bloque
+  minPts <- 400  # O el valor que hayas decidido usar
+  
+  png("KNN_distplot_RTSNE2_TIC.png")
+  kNNdistplot(TIC_rtsne2$Y, k = minPts - 1)
+  title(main = "KNN Distplot - RTSNE2 TIC")
+  dev.off()
+  
+  png("KNN_distplot_RTSNE2_RMS.png")
+  kNNdistplot(RMS_rtsne2$Y, k = minPts - 1)
+  title(main = "KNN Distplot - RTSNE2 RMS")
+  dev.off()
+  
+  png("KNN_distplot_RTSNE2_MAX.png")
+  kNNdistplot(MAX_rtsne2$Y, k = minPts - 1)
+  title(main = "KNN Distplot - RTSNE2 MAX")
+  dev.off()
+  
+  png("KNN_distplot_RTSNE2_pks.png")
+  kNNdistplot(pks_rtsne2$Y, k = minPts - 1)
+  title(main = "KNN Distplot - RTSNE2 pks")
+  dev.off()
+  
+  # Valores de eps ajustados para RTSNE2 (deberás calibrarlos)
+  eps_RTSNE2_scaled <- 4      # Ejemplo, ajustar según nuevos datos
+  eps_RTSNE2_TIC <- 10        # Ejemplo, ajustar según nuevos datos
+  eps_RTSNE2_RMS <- 4         # Ejemplo, ajustar según nuevos datos
+  eps_RTSNE2_MAX <- 4         # Ejemplo, ajustar según nuevos datos
+  eps_RTSNE2_pks <- 4         # Ejemplo, ajustar según nuevos datos
+  
+  # Cálculo de frNN para RTSNE2
+  
+  frNN_RTSNE2_TIC <- frNN(TIC_rtsne2$Y, eps = eps_RTSNE2_TIC,
+                          sort = TRUE, search = "kdtree", bucketSize = 10,
+                          splitRule = "suggest", approx = 0)
+  
+  frNN_RTSNE2_RMS <- frNN(RMS_rtsne2$Y, eps = eps_RTSNE2_RMS,
+                          sort = TRUE, search = "kdtree", bucketSize = 10,
+                          splitRule = "suggest", approx = 0)
+  
+  frNN_RTSNE2_MAX <- frNN(MAX_rtsne2$Y, eps = eps_RTSNE2_MAX,
+                          sort = TRUE, search = "kdtree", bucketSize = 10,
+                          splitRule = "suggest", approx = 0)
+  
+  frNN_RTSNE2_pks <- frNN(pks_rtsne2$Y, eps = eps_RTSNE2_pks,
+                          sort = TRUE, search = "kdtree", bucketSize = 10,
+                          splitRule = "suggest", approx = 0)
+  
+  # DBSCAN para RTSNE2
+  dbscan_RTSNE2_TIC <- dbscan(frNN_RTSNE2_TIC, minPts = minPts)
+  dbscan_RTSNE2_RMS <- dbscan(frNN_RTSNE2_RMS, minPts = minPts)
+  dbscan_RTSNE2_MAX <- dbscan(frNN_RTSNE2_MAX, minPts = minPts)
+  dbscan_RTSNE2_pks <- dbscan(frNN_RTSNE2_pks, minPts = minPts)
+  
+  # Función de visualización (se mantiene igual)
+  plot_clusters <- function(coords, dbscan_result, title) {
+    df <- data.frame(coords,
+                     cluster = as.factor(dbscan_result$cluster))
+    
+    ggplot(df, aes(x = x, y = y, color = cluster)) +
+      geom_point(size = 1.5, alpha = 0.7) +
+      scale_color_manual(values = c("black", rainbow(length(unique(dbscan_result$cluster)) - 1))) + 
+      labs(title = title, color = "Cluster") +
+      theme_minimal()
+  }
+  
+  # Exportar resultados a PDF
+  pdf("Clusters_DBSCAN_RTSNE2_epsilon_4_10_4_4_4_and_minPts_400.pdf")
+  
+  print(plot_clusters(pks$pos, dbscan_RTSNE2_TIC, "Clusters DBSCAN - RTSNE2 TIC"))
+  print(plot_clusters(pks$pos, dbscan_RTSNE2_RMS, "Clusters DBSCAN - RTSNE2 RMS"))
+  print(plot_clusters(pks$pos, dbscan_RTSNE2_MAX, "Clusters DBSCAN - RTSNE2 MAX"))
+  print(plot_clusters(pks$pos, dbscan_RTSNE2_pks, "Clusters DBSCAN - RTSNE2 pks"))
+  
+  dev.off()
+})
+
+cat("Tiempo total de ejecución DBSCAN-RTSNE2:", tiempo_DBSCAN_RTSNE2[3], "segundos\n")
+
+
+rm(list = c("minPts", 
+            paste0("eps_RTSNE2_", c("scaled", "TIC", "RMS", "MAX", "pks")),
+            paste0("frNN_RTSNE2_", c("scaled", "TIC", "RMS", "MAX", "pks")),
+            "plot_clusters"))
+
+
+```
+Aplicación de DBSCAN tras la reducción de la dimensionalidad por RTSNE3: 
+  
+  ```{r}
+tiempo_DBSCAN_RTSNE3 <- system.time({
+  
+  # Asegúrate de que minPts esté definido antes de este bloque
+  minPts <- 400  # O el valor que hayas decidido usar
+  
+  
+  png("KNN_distplot_RTSNE3_TIC.png")
+  kNNdistplot(TIC_rtsne3$Y, k = minPts - 1)
+  title(main = "KNN Distplot - RTSNE3 TIC")
+  dev.off()
+  
+  png("KNN_distplot_RTSNE3_RMS.png")
+  kNNdistplot(RMS_rtsne3$Y, k = minPts - 1)
+  title(main = "KNN Distplot - RTSNE3 RMS")
+  dev.off()
+  
+  png("KNN_distplot_RTSNE3_MAX.png")
+  kNNdistplot(MAX_rtsne3$Y, k = minPts - 1)
+  title(main = "KNN Distplot - RTSNE3 MAX")
+  dev.off()
+  
+  png("KNN_distplot_RTSNE3_pks.png")
+  kNNdistplot(pks_rtsne3$Y, k = minPts - 1)
+  title(main = "KNN Distplot - RTSNE3 pks")
+  dev.off()
+  
+  # Valores de eps ajustados para RTSNE3 (revisar con nuevos datos)
+  eps_RTSNE3_scaled <- 8   
+  eps_RTSNE3_TIC <- 20      
+  eps_RTSNE3_RMS <- 20       
+  eps_RTSNE3_MAX <- 20        
+  eps_RTSNE3_pks <- 8       
+  
+  # Cálculo de frNN para RTSNE3
+  frNN_RTSNE3_TIC <- frNN(TIC_rtsne3$Y, eps = eps_RTSNE3_TIC,
+                          sort = TRUE, search = "kdtree", bucketSize = 10,
+                          splitRule = "suggest", approx = 0)
+  
+  frNN_RTSNE3_RMS <- frNN(RMS_rtsne3$Y, eps = eps_RTSNE3_RMS,
+                          sort = TRUE, search = "kdtree", bucketSize = 10,
+                          splitRule = "suggest", approx = 0)
+  
+  frNN_RTSNE3_MAX <- frNN(MAX_rtsne3$Y, eps = eps_RTSNE3_MAX,
+                          sort = TRUE, search = "kdtree", bucketSize = 10,
+                          splitRule = "suggest", approx = 0)
+  
+  frNN_RTSNE3_pks <- frNN(pks_rtsne3$Y, eps = eps_RTSNE3_pks,
+                          sort = TRUE, search = "kdtree", bucketSize = 10,
+                          splitRule = "suggest", approx = 0)
+  
+  # DBSCAN para RTSNE3
+  dbscan_RTSNE3_TIC <- dbscan(frNN_RTSNE3_TIC, minPts = minPts)
+  dbscan_RTSNE3_RMS <- dbscan(frNN_RTSNE3_RMS, minPts = minPts)
+  dbscan_RTSNE3_MAX <- dbscan(frNN_RTSNE3_MAX, minPts = minPts)
+  dbscan_RTSNE3_pks <- dbscan(frNN_RTSNE3_pks, minPts = minPts)
+  
+  # Función de visualización (sin cambios)
+  plot_clusters <- function(coords, dbscan_result, title) {
+    df <- data.frame(coords,
+                     cluster = as.factor(dbscan_result$cluster))
+    
+    ggplot(df, aes(x = x, y = y, color = cluster)) +
+      geom_point(size = 1.5, alpha = 0.7) +
+      scale_color_manual(values = c("black", rainbow(length(unique(dbscan_result$cluster)) - 1))) + 
+      labs(title = title, color = "Cluster") +
+      theme_minimal()
+  } 
+  
+  # Exportar resultados a PDF
+  pdf("Clusters_DBSCAN_RTSNE3_epsilon_8_20_20_20_8_and_minPts_400.pdf")
+  print(plot_clusters(pks$pos, dbscan_RTSNE3_TIC, "Clusters DBSCAN - RTSNE3 TIC"))
+  print(plot_clusters(pks$pos, dbscan_RTSNE3_RMS, "Clusters DBSCAN - RTSNE3 RMS"))
+  print(plot_clusters(pks$pos, dbscan_RTSNE3_MAX, "Clusters DBSCAN - RTSNE3 MAX"))
+  print(plot_clusters(pks$pos, dbscan_RTSNE3_pks, "Clusters DBSCAN - RTSNE3 pks"))
+  
+  dev.off()
+})
+
+cat("Tiempo total de ejecución DBSCAN-RTSNE3:", tiempo_DBSCAN_RTSNE3[3], "segundos\n")
+
+# Limpieza de variables
+rm(list = c("minPts", 
+            paste0("eps_RTSNE3_", c("scaled", "TIC", "RMS", "MAX", "pks")),
+            paste0("frNN_RTSNE3_", c("scaled", "TIC", "RMS", "MAX", "pks")),
+            "plot_clusters"))
+rm(list = c("pks_rtsne3", "scaled_rtsne3", "TIC_rtsne3", "RMS_rtsne3", "MAX_rtsne3",
+            "pks_rtsne2", "scaled_rtsne2", "TIC_rtsne2", "RMS_rtsne2", "MAX_rtsne2"))
+
+
+
+```
+Clusterización por KMEANS tras la reducción de la dimensionalidad por UMAP: 
+  
+  ```{r}
+
+Se hace scaled en TIC,RMS,MAX y la pks porque umap es dependiente del escalado, al trabajar con distancias
+
+tiempo_UMAP <- system.time ({
+  pks_umap <- uwot::umap(scaled_data, n_neighbors = 15, n_components = 3, metric = "euclidean")
+  
+  TIC_umap <-  uwot::umap(scale(normalized_data_TIC), n_neighbors = 15, n_components = 3, metric = "euclidean")
+  
+  
+  RMS_umap <- uwot::umap(scale(normalized_data_RMS), n_neighbors = 15, n_components = 3, metric = "euclidean")
+  
+  MAX_umap <- uwot::umap(scale(normalized_data_MAX), n_neighbors = 15, n_components = 3, metric = "euclidean") })
+
+
+
+# K-MEANS tra reducción de la dimensionalidad con UMAP: 
+tiempo_KMEANS_UMAP <- system.time({
+  set.seed(111)
+  pks_umap_kmeans_k4 <- kmeans(pks_umap, centers = 4)
+  pks_umap_kmeans_k7 <- kmeans(pks_umap, centers = 7)
+  pks_umap_kmeans_k8 <- kmeans(pks_umap, centers = 8)
+  TIC_umap_kmeans_k4 <- kmeans(TIC_umap, centers = 4)
+  TIC_umap_kmeans_k7 <- kmeans(TIC_umap, centers = 7)
+  TIC_umap_kmeans_k8 <- kmeans(TIC_umap, centers = 8)
+  RMS_umap_kmeans_k4 <- kmeans(RMS_umap, centers = 4)
+  RMS_umap_kmeans_k7 <- kmeans(RMS_umap, centers = 7)
+  RMS_umap_kmeans_k8 <- kmeans(RMS_umap, centers = 8)
+  MAX_umap_kmeans_k4 <- kmeans(MAX_umap , centers = 4)
+  MAX_umap_kmeans_k7 <- kmeans(MAX_umap , centers = 7)
+  MAX_umap_kmeans_k8 <- kmeans(MAX_umap , centers = 8)
+  
+  
+  cluster_colors_4_umap <- viridis::viridis(4, option = "plasma")
+  cluster_colors_7_umap <- viridis::viridis(7, option = "plasma")
+  cluster_colors_8_umap <- viridis::viridis(8, option = "plasma")
+  
+  
+  #Plots_KMeans:
+  
+  df_nr_1_umap <- data.frame(pks$pos, cluster_1_umap = as.factor(pks_umap_kmeans_k4$cluster))
+  plot_pks_umap_kmeans_k4 <- ggplot(df_nr_1_umap, aes(x = x, y = y, fill = cluster_1_umap)) + geom_raster() + scale_fill_manual(values = cluster_colors_4_umap) + labs(fill = "Clusters", title = paste("Cluster analysis pks-umap with 4 Cluster")) +
+    theme_minimal()
+  
+  df_nr_2_umap <- data.frame(pks$pos, cluster_2_umap = as.factor(pks_umap_kmeans_k7$cluster))
+  plot_pks_umap_kmeans_k7 <- ggplot(df_nr_2_umap, aes(x = x, y = y, fill = cluster_2_umap)) + geom_raster() + scale_fill_manual(values = cluster_colors_7_umap) + labs(fill = "Clusters", title = paste("Cluster analysis pks-umap with 7 Cluster")) +
+    theme_minimal()
+  
+  df_nr_3_umap <- data.frame(pks$pos, cluster_3_umap = as.factor(pks_umap_kmeans_k8$cluster))
+  plot_pks_umap_kmeans_k8 <- ggplot(df_nr_3_umap, aes(x = x, y = y, fill = cluster_3_umap)) + geom_raster() + scale_fill_manual(values = cluster_colors_8_umap) + labs(fill = "Clusters", title = paste("Cluster analysis pks-umap with 8 Cluster")) +
+    theme_minimal()
+  
+  df_nr_7_umap <- data.frame(pks$pos, cluster_7_umap = as.factor(TIC_umap_kmeans_k4$cluster))
+  plot_TIC_umap_kmeans_k4 <- ggplot(df_nr_7_umap, aes(x = x, y = y, fill = cluster_7_umap)) + geom_raster() + scale_fill_manual(values = cluster_colors_4_umap) + labs(fill = "Clusters", title = paste("Cluster analysis TIC-umap with 4 Cluster")) +
+    theme_minimal()
+  
+  df_nr_8_umap <- data.frame(pks$pos, cluster_8_umap = as.factor(TIC_umap_kmeans_k7$cluster))
+  plot_TIC_umap_kmeans_k7 <- ggplot(df_nr_8_umap, aes(x = x, y = y, fill = cluster_8_umap)) + geom_raster() + scale_fill_manual(values = cluster_colors_7_umap) + labs(fill = "Clusters", title = paste("Cluster analysis TIC-umap with 7 Cluster")) +
+    theme_minimal()
+  
+  df_nr_9_umap <- data.frame(pks$pos, cluster_9_umap = as.factor(TIC_umap_kmeans_k8$cluster))
+  plot_TIC_umap_kmeans_k8 <- ggplot(df_nr_9_umap, aes(x = x, y = y, fill = cluster_9_umap)) + geom_raster() + scale_fill_manual(values = cluster_colors_8_umap) + labs(fill = "Clusters", title = paste("Cluster analysis TIC-umap with 8 Cluster")) +
+    theme_minimal()
+  
+  df_nr_10_umap <- data.frame(pks$pos, cluster_10_umap = as.factor(RMS_umap_kmeans_k4$cluster))
+  plot_RMS_umap_kmeans_k4 <- ggplot(df_nr_10_umap, aes(x = x, y = y, fill = cluster_10_umap)) + geom_raster() + scale_fill_manual(values = cluster_colors_4_umap) + labs(fill = "Clusters", title = paste("Cluster analysis RMS-umap with 4 Cluster")) +
+    theme_minimal()
+  
+  df_nr_11_umap <- data.frame(pks$pos, cluster_11_umap = as.factor(RMS_umap_kmeans_k7$cluster))
+  plot_RMS_umap_kmeans_k7 <- ggplot(df_nr_11_umap, aes(x = x, y = y, fill = cluster_11_umap)) + geom_raster() + scale_fill_manual(values = cluster_colors_7_umap) + labs(fill = "Clusters", title = paste("Cluster analysis RMS-umap with 7 Cluster")) +
+    theme_minimal()
+  
+  df_nr_12_umap <- data.frame(pks$pos, cluster_12_umap = as.factor(RMS_umap_kmeans_k8$cluster))
+  plot_RMS_umap_kmeans_k8 <- ggplot(df_nr_12_umap, aes(x = x, y = y, fill = cluster_12_umap)) + geom_raster() + scale_fill_manual(values = cluster_colors_8_umap) + labs(fill = "Clusters", title = paste("Cluster analysis RMS-umap with 8 Cluster")) +
+    theme_minimal()
+  
+  df_nr_13_umap <- data.frame(pks$pos, cluster_13_umap = as.factor(MAX_umap_kmeans_k4$cluster))
+  plot_MAX_umap_kmeans_k4 <- ggplot(df_nr_13_umap, aes(x = x, y = y, fill = cluster_13_umap)) + geom_raster() + scale_fill_manual(values = cluster_colors_4_umap) + labs(fill = "Clusters", title = paste("Cluster analysis MAX-umap with 4 Cluster")) +
+    theme_minimal()
+  
+  df_nr_14_umap <- data.frame(pks$pos, cluster_14_umap = as.factor(MAX_umap_kmeans_k7$cluster))
+  plot_MAX_umap_kmeans_k7 <- ggplot(df_nr_14_umap, aes(x = x, y = y, fill = cluster_14_umap)) + geom_raster() + scale_fill_manual(values = cluster_colors_7_umap) + labs(fill = "Clusters", title = paste("Cluster analysis MAX-umap with 7 Cluster")) +
+    theme_minimal()
+  
+  df_nr_15_umap <- data.frame(pks$pos, cluster_15_umap = as.factor(MAX_umap_kmeans_k8$cluster))
+  plot_MAX_umap_kmeans_k8 <- ggplot(df_nr_15_umap, aes(x = x, y = y, fill = cluster_15_umap)) + geom_raster() + scale_fill_manual(values = cluster_colors_8_umap) + labs(fill = "Clusters", title = paste("Cluster analysis MAX-umap with 8 Cluster")) +
+    theme_minimal()
+  
+  pdf("kmeans_umap_K4,7,8_TFG_AM.pdf")
+  
+  print(plot_pks_umap_kmeans_k4)
+  print(plot_pks_umap_kmeans_k7)
+  print(plot_pks_umap_kmeans_k8)
+  print(plot_TIC_umap_kmeans_k4)
+  print(plot_TIC_umap_kmeans_k7)
+  print(plot_TIC_umap_kmeans_k8)
+  print(plot_RMS_umap_kmeans_k4)
+  print(plot_RMS_umap_kmeans_k7)
+  print(plot_RMS_umap_kmeans_k8)
+  print(plot_MAX_umap_kmeans_k4)
+  print(plot_MAX_umap_kmeans_k7)
+  print(plot_MAX_umap_kmeans_k8)
+  
+  dev.off()
+})
+
+cat("Tiempo total de ejecución KMEANS-UMAP:", tiempo_KMEANS_UMAP[3], "segundos\n")
+
+rm(list = c(paste0("df_nr_", 1:15, "_umap"),
+            paste0("plot_", c("pks", "scaled", "TIC", "RMS", "MAX"), "_umap_kmeans_k", c(4,7,8)),
+            paste0("cluster_colors_", c(4,7,8), "_umap")))
+
+
+```
+Clusterización jerarquica (HC) tras la reducción de la dimensionalidad con UMAP: 
+  ```{r}
+tiempo_HC_UMAP <- system.time ({
+
+  #Método jerárquico para los UMAP_pks:
+  
+  distance_umap_pks <- dist(pks_umap, method = "euclidean")
+  hclust_umap_pks <- fastcluster::hclust(distance_umap_pks, method = "complete")
+  hgroups_umap_pks_2 <- cutree(hclust_umap_pks, k = 2)
+  hgroups_umap_pks_3 <- cutree(hclust_umap_pks, k = 3)
+  hgroups_umap_pks_4 <- cutree(hclust_umap_pks, k = 4)
+  hgroups_umap_pks_5 <- cutree(hclust_umap_pks, k = 5)
+  hgroups_umap_pks_6 <- cutree(hclust_umap_pks, k = 6)
+  hgroups_umap_pks_7 <- cutree(hclust_umap_pks, k = 7)
+  hgroups_umap_pks_8 <- cutree(hclust_umap_pks, k = 8)
+  hgroups_umap_pks_9 <- cutree(hclust_umap_pks, k = 9)
+  hgroups_umap_pks_10 <- cutree(hclust_umap_pks, k = 10)
+  
+  clustering_umap_pks_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = as.factor(hgroups_umap_pks_4))) +
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_UMAP pks k=4") + theme_light()
+  clustering_umap_pks_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = as.factor(hgroups_umap_pks_7))) +
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_UMAP pks k=7") + theme_light()
+  clustering_umap_pks_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = as.factor(hgroups_umap_pks_8))) +
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_UMAP pks k=8") + theme_light()
+  
+  #Método jerárquico para los UMAP_TIC:
+  distance_umap_tic <- dist(TIC_umap,  method = "euclidean")
+  hclust_umap_tic <- fastcluster::hclust(distance_umap_tic, method = "complete")
+  
+  hgroups_umap_tic_2 <- cutree(hclust_umap_tic, k = 2)
+  hgroups_umap_tic_3 <- cutree(hclust_umap_tic, k = 3)
+  hgroups_umap_tic_4 <- cutree(hclust_umap_tic, k = 4)
+  hgroups_umap_tic_5 <- cutree(hclust_umap_tic, k = 5)
+  hgroups_umap_tic_6 <- cutree(hclust_umap_tic, k = 6)
+  hgroups_umap_tic_7 <- cutree(hclust_umap_tic, k = 7)
+  hgroups_umap_tic_8 <- cutree(hclust_umap_tic, k = 8)
+  hgroups_umap_tic_9 <- cutree(hclust_umap_tic, k = 9)
+  hgroups_umap_tic_10 <- cutree(hclust_umap_tic, k = 10)
+  
+  clustering_umap_tic_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = as.factor(hgroups_umap_tic_4))) +
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_UMAP TIC k=4") + theme_light()
+  clustering_umap_tic_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = as.factor(hgroups_umap_tic_7))) +
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_UMAP TIC k=7") + theme_light()
+  clustering_umap_tic_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = as.factor(hgroups_umap_tic_8))) +
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_UMAP TIC k=8") + theme_light()
+  
+  #Método jerárquico para los UMAP_RMS:
+  
+  distance_umap_rms <- dist(RMS_umap, method = "euclidean")
+  hclust_umap_rms <- fastcluster::hclust(distance_umap_rms, method = "complete")
+  
+  hgroups_umap_rms_2 <- cutree(hclust_umap_rms, k = 2)
+  hgroups_umap_rms_3 <- cutree(hclust_umap_rms, k = 3)
+  hgroups_umap_rms_4 <- cutree(hclust_umap_rms, k = 4)
+  hgroups_umap_rms_5 <- cutree(hclust_umap_rms, k = 5)
+  hgroups_umap_rms_6 <- cutree(hclust_umap_rms, k = 6)
+  hgroups_umap_rms_7 <- cutree(hclust_umap_rms, k = 7)
+  hgroups_umap_rms_8 <- cutree(hclust_umap_rms, k = 8)
+  hgroups_umap_rms_9 <- cutree(hclust_umap_rms, k = 9)
+  hgroups_umap_rms_10 <- cutree(hclust_umap_rms, k = 10)
+  
+  clustering_umap_rms_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = as.factor(hgroups_umap_rms_4))) +
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_UMAP RMS k=4") + theme_light()
+  clustering_umap_rms_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = as.factor(hgroups_umap_rms_7))) +
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_UMAP RMS k=7") + theme_light()
+  clustering_umap_rms_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = as.factor(hgroups_umap_rms_8))) +
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_UMAP RMS k=8") + theme_light()
+  
+  #Método jerárquico para los UMAP_MAX:
+  
+  distance_umap_max <- dist(MAX_umap, method = "euclidean")
+  hclust_umap_max <- fastcluster::hclust(distance_umap_max, method = "complete")
+  
+  hgroups_umap_max_2 <- cutree(hclust_umap_max, k = 2)
+  hgroups_umap_max_3 <- cutree(hclust_umap_max, k = 3)
+  hgroups_umap_max_4 <- cutree(hclust_umap_max, k = 4)
+  hgroups_umap_max_5 <- cutree(hclust_umap_max, k = 5)
+  hgroups_umap_max_6 <- cutree(hclust_umap_max, k = 6)
+  hgroups_umap_max_7 <- cutree(hclust_umap_max, k = 7)
+  hgroups_umap_max_8 <- cutree(hclust_umap_max, k = 8)
+  hgroups_umap_max_9 <- cutree(hclust_umap_max, k = 9)
+  hgroups_umap_max_10 <- cutree(hclust_umap_max, k = 10)
+  
+  clustering_umap_max_4 <- ggplot(pks$pos, aes(x = x, y = y, fill = as.factor(hgroups_umap_max_4))) +
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_UMAP MAX k=4") + theme_light()
+  clustering_umap_max_7 <- ggplot(pks$pos, aes(x = x, y = y, fill = as.factor(hgroups_umap_max_7))) +
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_UMAP MAX k=7") + theme_light()
+  clustering_umap_max_8 <- ggplot(pks$pos, aes(x = x, y = y, fill = as.factor(hgroups_umap_max_8))) +
+    geom_raster() + scale_fill_viridis_d(option = "plasma") + labs(title = "Hierarchical_UMAP MAX k=8") + theme_light()
+  
+  pdf("HC_umap_K4,7,8_TFG_AM.pdf")
+  print(clustering_umap_pks_4)
+  print(clustering_umap_pks_7)
+  print(clustering_umap_pks_8)
+  print(clustering_umap_tic_4)
+  print(clustering_umap_tic_7)
+  print(clustering_umap_tic_8)
+  print(clustering_umap_rms_4)
+  print(clustering_umap_rms_7)
+  print(clustering_umap_rms_8)
+  print(clustering_umap_max_4)
+  print(clustering_umap_max_7)
+  print(clustering_umap_max_8)
+  dev.off() })
+
+cat("Tiempo total de ejecución HC-UMAP:", tiempo_HC_UMAP [3], "segundos\n")
+
+
+
+```
+
+#Clusterización por DBSCAN tras UMAP: 
+  tiempo_DBSCAN_UMAP <- system.time({
+    
+    # Definir minPts
+    minPts <- 4
+    
+    # Generar gráficos KNN
+    png("KNN_distplot_UMAP_TIC.png")
+    kNNdistplot(TIC_umap, k = minPts - 1)
+    title(main = "KNN Distplot - UMAP TIC")
+    dev.off()
+    
+    png("KNN_distplot_UMAP_RMS.png")
+    kNNdistplot(RMS_umap, k = minPts - 1)
+    title(main = "KNN Distplot - UMAP RMS")
+    dev.off()
+    
+    png("KNN_distplot_UMAP_MAX.png")
+    kNNdistplot(MAX_umap, k = minPts - 1)
+    title(main = "KNN Distplot - UMAP MAX")
+    dev.off()
+    
+    png("KNN_distplot_UMAP_pks.png")
+    kNNdistplot(pks_umap, k = minPts - 1)
+    title(main = "KNN Distplot - UMAP pks")
+    dev.off()
+    
+    # Definir valores de eps para UMAP
+    eps_UMAP_TIC <- 0.7
+    eps_UMAP_RMS <- 0.7
+    eps_UMAP_MAX <- 0.7
+    eps_UMAP_pks <- 4
+    
+    # Cálculo de frNN para UMAP
+    frNN_UMAP_TIC <- frNN(TIC_umap, eps = eps_UMAP_TIC,
+                          sort = TRUE, search = "kdtree", bucketSize = 10,
+                          splitRule = "suggest", approx = 0)
+    
+    frNN_UMAP_RMS <- frNN(RMS_umap, eps = eps_UMAP_RMS,
+                          sort = TRUE, search = "kdtree", bucketSize = 10,
+                          splitRule = "suggest", approx = 0)
+    
+    frNN_UMAP_MAX <- frNN(MAX_umap, eps = eps_UMAP_MAX,
+                          sort = TRUE, search = "kdtree", bucketSize = 10,
+                          splitRule = "suggest", approx = 0)
+    
+    frNN_UMAP_pks <- frNN(pks_umap, eps = eps_UMAP_pks,
+                          sort = TRUE, search = "kdtree", bucketSize = 10,
+                          splitRule = "suggest", approx = 0)
+    
+    # DBSCAN para UMAP
+    dbscan_UMAP_TIC <- dbscan(frNN_UMAP_TIC, minPts = minPts)
+    dbscan_UMAP_RMS <- dbscan(frNN_UMAP_RMS, minPts = minPts)
+    dbscan_UMAP_MAX <- dbscan(frNN_UMAP_MAX, minPts = minPts)
+    dbscan_UMAP_pks <- dbscan(frNN_UMAP_pks, minPts = minPts)
+    
+    # Función de visualización
+    plot_clusters <- function(coords, dbscan_result, title) {
+      df <- data.frame(coords,
+                       cluster = as.factor(dbscan_result$cluster))
+      
+      ggplot(df, aes(x = X1, y = X2, color = cluster)) +
+        geom_point(size = 1.5, alpha = 0.7) +
+        scale_color_manual(values = c("black", rainbow(length(unique(dbscan_result$cluster)) - 1))) + 
+        labs(title = title, color = "Cluster") +
+        theme_minimal()
+    }
+    
+    # Exportar resultados a PDF
+    pdf("Clusters_DBSCAN_UMAP_epsilon_10_4_4_4_and_minPts_400.pdf")
+    
+    print(plot_clusters(TIC_umap, dbscan_UMAP_TIC, "Clusters DBSCAN - UMAP TIC"))
+    print(plot_clusters(RMS_umap, dbscan_UMAP_RMS, "Clusters DBSCAN - UMAP RMS"))
+    print(plot_clusters(MAX_umap, dbscan_UMAP_MAX, "Clusters DBSCAN - UMAP MAX"))
+    print(plot_clusters(pks_umap, dbscan_UMAP_pks, "Clusters DBSCAN - UMAP pks"))
+    
+    dev.off()
+  })
+
+
+
