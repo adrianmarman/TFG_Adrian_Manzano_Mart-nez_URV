@@ -1,0 +1,75 @@
+#Se ha escogido UMAP-MAX-KM con 8 cluster por el resultado observado en el histograma de la media de la Silueta. Object <- TIC_umap_kMeans_k8. 
+#Cluster 1 <- Tumor; Cluster 2 <- Tumor; Cluster 3 <- No tumr (Dentro de la tumor); Cluster 4 <- Tumor; Cluster 5 <- Tumor; Cluster 6 <- ¿Matriz?; Cluster 7 <- Tumor; Cluster 8 <- No tumor
+MAX_umap_kMeans_k8_transformed <- MAX_umap_kmeans_k8
+MAX_umap_kMeans_k8_transformed$cluster[MAX_umap_kmeans_k8$cluster %in% c(2,5,6)] <- 1
+MAX_umap_kMeans_k8_transformed$cluster[MAX_umap_kmeans_k8$cluster %in% c(7,8,1)] <- 2
+MAX_umap_kMeans_k8_transformed$cluster[MAX_umap_kmeans_k8$cluster %in% c(3,4)] <- 3
+# TIC_umap contiene los datos originales
+MAX_umap_df <- as.data.frame(MAX_umap)
+perform_t_tests <- function(data, clusters, cluster_labels) {
+  cluster_1 <- clusters[1]
+  cluster_2 <- clusters[2]
+  t_tests <- apply(data[cluster_labels$cluster %in% clusters, ], 2, function(x) {
+    group_1 <- x[cluster_labels$cluster == cluster_1]
+    group_2 <- x[cluster_labels$cluster == cluster_2]
+    t.test(group_1, group_2)
+  })
+  return(t_tests)
+}
+resultado_t_MAX_umap_Kmeans_K8 <- perform_t_tests(normalized_data_MAX, c(1,2), MAX_umap_kMeans_k8_transformed)
+
+# 1. Calcular los p-values de los t-tests
+p_values_t_umap_kmeans <- sapply(resultado_t_MAX_umap_Kmeans_K8, function(test_result) test_result$p.value)
+
+# 2. Ajustar los p-values usando FDR
+p_values_t_umap_kmeans_fdr <- p.adjust(p_values_t_umap_kmeans, method = "fdr")
+
+# 3. Calcular el fold change entre los clusters 1 y 2
+fold_changes_t_umap_kmeans <- apply(normalized_data_MAX, 2, function(x) {
+  mean(x[MAX_umap_kMeans_k8_transformed$cluster == 1]) / mean(x[MAX_umap_kMeans_k8_transformed$cluster == 2])
+})
+
+# 4. Crear un data frame con los valores p ajustados y los fold changes
+pvalues_fc_t_umap_kmeans <- data.frame(
+  pvals_fdr = p_values_t_umap_kmeans_fdr,
+  fc = fold_changes_t_umap_kmeans
+)
+
+# 5. Filtrar los features con FDR < 0.01 y log2(fold change) >= 1 o <= -1
+significant_features_umap_kmeans <- which(pvalues_fc_t_umap_kmeans$pvals_fdr < 0.01 &
+                                            (log2(pvalues_fc_t_umap_kmeans$fc) >= 1 | log2(pvalues_fc_t_umap_kmeans$fc) <= -1))
+
+library(ggplot2)
+
+library(ggplot2)
+library(ggrepel)
+
+
+# 2. Crear un data frame con los datos para el Volcano plot
+library(ggplot2)
+
+# Crear un data frame con los datos para el Volcano plot
+volcano_data <- data.frame(
+  log2_fc = log2(fold_changes_t_umap_kmeans),
+  minus_log10_pval = -log10(p_values_t_umap_kmeans_fdr)
+)
+
+# Identificar los features significativos
+significant_features <- (pvalues_fc_t_umap_kmeans$pvals_fdr < 0.01) &
+  ((log2(fold_changes_t_umap_kmeans) >= 1) | (log2(fold_changes_t_umap_kmeans) <= -1))
+
+# Añadir una columna para colorear los puntos
+volcano_data$color <- ifelse(significant_features, "red", "gray")
+
+# Crear el Volcano plot usando ggplot2
+ggplot(volcano_data, aes(x = log2_fc, y = minus_log10_pval, color = color)) +
+  geom_point(size = 2) +
+  scale_color_identity() +  # Usa los colores directamente
+  labs(
+    title = "Volcano Plot",
+    x = "Log2(Fold Change)",
+    y = "-Log10(FDR P-value)"
+  ) +
+  theme_minimal() +
+  geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "black") +  # Añade líneas verticales
+  geom_hline(yintercept = -log10(0.01), linetype = "dashed", color = "black")
