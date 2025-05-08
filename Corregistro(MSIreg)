@@ -1,0 +1,124 @@
+Definición DataPath y de los archivos .IMZML y .TIF
+DATAPATH <- "~/Coregister"
+list.files(DATAPATH)
+DATAPATH <- "DATOS_2"
+list.files(DATAPATH)
+mse_filename <- "221128CB_Au_P_BU1627_T2_Tumor_new-trimmed.imzML"
+opt_filename <- "image_Nadia (1.1).png"
+#Se cargan todos los paquetes necesarios segun el desarrollador.
+library(BiocGenerics)
+library(S4Vectors)
+library(EBImage)
+library(SimpleITK)
+library(Cardinal)
+library(msireg)
+library(BiocParallel)
+library(Rtsne)
+library(ggplot2)
+library(scales)
+#Lectura del archivos IMZML y .TIF antes definidos.
+mse <- readMSIData(file.path(DATAPATH,
+                             mse_filename))
+opt <- readImage(file.path(DATAPATH,
+                           opt_filename))
+opt |> display("raster")
+# Media de m/z de los picos,filtrado y normalización.
+RNGkind("L'Ecuyer-CMRG")
+setCardinalBPPARAM(MulticoreParam(progressbar=TRUE))
+setCardinalVerbose(TRUE)
+mse_mean <- summarizeFeatures(mse, FUN="mean")
+ref <- mse_mean |>
+  peakPick(method="mad", SNR=5) |>
+  peakAlign("mean", tolerance=80, units="ppm") |>
+  peakFilter() |>
+  process()
+mse_peaks <- mse |>
+  normalize(method="tic") |>
+  peakBin(ref=mz(ref), tolerance=80, units="ppm") |>
+  process()
+target_mz <- 784.5271
+
+# Acceder al vector de m/z directamente
+mz_vals <- mse_peaks@featureData@mz
+
+# Encontrar el índice del m/z más cercano
+mz_index <- which.min(abs(mz_vals - target_mz))
+
+# Verificar el valor exacto encontrado
+closest_mz <- mz_vals[mz_index]
+cat("El valor de m/z más cercano es:", closest_mz, "\n")
+
+#Visualización del valor m/z = 784.527: 
+image(mse_peaks, mz=784.5279)
+#Se selecciona un ión altamente representativo y se selecciona la ROI manualmente:
+mse_roi <- multiSelectROI(mse_peaks, mz= 784.5279)
+#Se selecciona la ROI de la imágen inmunohistoquímica
+opt_roi <- multiDrawROI(opt)
+# Se hace un prealineamiento de las imagenes antes del coregistro.
+OUT <- cropToEdgesAndPadZeros(ref_mask=mse_roi,
+                              target_mask=opt_roi, target_img=opt)
+opt <- OUT$img
+opt_roi <- OUT$mask
+# Se hace el coregistro en sí:
+OUT <- coregister(mse=mse_peaks, opt=opt, mse_roi=mse_roi,
+                  opt_roi=opt_roi, spatial_scale=3,
+                  BPPARAM=MulticoreParam(), verbose=TRUE)
+#Conversión de los objetos OUT$opt y OUT$msimg generados como matrices a imagenes de SimpleITK.
+#Además, la función Rsample se encarga de aplicar la trasnformación a la #OUT$moving.
+OUT$fixed <- SimpleITK::as.image(OUT$opt, isVector=FALSE)
+OUT$moving <- SimpleITK::as.image(OUT$msimg, isVector=FALSE)
+OUT$movingx <- Resample(OUT$moving, OUT$reg$TF)
+## En las sigueintes líneas se convierten las imagenes SimpleITK a imagenes EBIimage
+## para un trazado de la imágen más fácil y flexible por consejo del desarrollador.
+# Convertir las imágenes de SimpleITK a arrays
+.fixed_array <- as.array(OUT$fixed)
+.moving_array <- as.array(OUT$moving)
+.movingx_array <- as.array(OUT$movingx)
+# Convertir los arrays a objetos de EBImage
+.fixed <- EBImage::Image(.fixed_array)
+.moving <- EBImage::Image(.moving_array)
+.movingx <- EBImage::Image(.movingx_array)
+EBImage::display(.fixed)
+EBImage::display(.moving)
+EBImage::display(.movingx)
+# Convertir las imágenes en escala de grises a RGB
+color_fixed <- channel(.fixed, "rgb")
+color_moving <- channel(.moving, "rgb")
+color_movingx <- channel(.movingx, "rgb")
+# Modificar los canales RGB para darles un color personalizado
+color_fixed[,,1] <- color_fixed[,,1] * 1.5 # Intensificar el canal rojo
+color_moving[,,2] <- color_moving[,,2] * 1.5 # Intensificar el canal verde
+color_movingx[,,3] <- color_movingx[,,3] * 1.5 # Intensificar el canal azul
+# Mostrar las imágenes con los colores modificados
+display(color_fixed)
+display(color_moving)
+display(color_movingx)
+# Crear superposiciones coloridas
+alpha <- 0.5 # Factor de mezcla
+# Superposición antes de la coregistración
+ol1 <- (color_fixed * alpha + color_moving * (1 - alpha))
+# Superposición después de la coregistración
+ol2 <- (color_fixed * (1 - alpha) + color_movingx * alpha)
+# Mostrar las superposiciones coloridas
+display(ol1)
+display(ol2)
+# Definir los parámetros gráficos
+def.par <- par(no.readonly=TRUE)
+height <- 11
+width <- height * (dim(.fixed)[1] / dim(.fixed)[2])
+# Títulos para cada imagen
+titles <- c("Optical image", "Mass spec. image", "Overlay before coregistration", "Overlay after coregistration")
+# Configurar la disposición de la gráfica
+par(mar=c(0.25, 0.25, 0.75, 0.25))
+pl <- layout(mat=matrix(c(1:4), ncol=2, byrow=TRUE),
+             heights=rep(height/2, 2), widths=rep(width/2, 2),
+             respect=TRUE)
+# Mostrar las imágenes con colores y superposiciones
+sapply(c(1:4), function(x) {
+  plot.new()
+  rasterImage(list(color_fixed, color_moving, ol1, ol2)[[x]],
+              xleft=0, xright=1, ytop=0, ybottom=1,
+              interpolate=FALSE)
+  title(titles[x])
+})
+par(def.par)
