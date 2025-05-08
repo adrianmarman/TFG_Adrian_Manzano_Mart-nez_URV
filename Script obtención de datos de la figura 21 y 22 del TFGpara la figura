@@ -1,0 +1,752 @@
+# Cargar librerías
+setwd("~/Desktop/TFG_AM/Imput_Coregister")
+package_list <- c("rMSI2", "stats", "dbscan", "ggplot2", "fastcluster", "viridis",  "dplyr", "FactoMineR", "factoextra", "gridExtra", "Rtsne", "NbClust")
+lapply(package_list, library, character.only = TRUE)
+library(cluster)
+library(factoextra)
+
+# Calculo de la silueta para K4, K7 y K8 de HC con diferentes reduccione y tratamiento de los datos. 
+
+# Primer ordenador - Datos sin reducir dimensionalidad
+load("~/Desktop/TFG_AM/PCA-KMEANS-HCLUST.RData")
+
+# Función para calcular la media de la silueta
+mean_silhouette <- function(sil) {
+  mean(sil[, 3])
+}
+
+# Calcular distancias una sola vez (datos sin reducir)
+dist_pks_sin_reducir <- dist_pks
+dist_TIC_sin_reducir <- dist_TIC
+dist_RMS_sin_reducir <- dist_RMS
+dist_MAX_sin_reducir <- dist_MAX
+
+# PKS sin reducir
+silueta_hgroups_pks_sin_reducir_4 <- silhouette(hgroups_pks_data_4, dist_pks_sin_reducir)
+silueta_hgroups_pks_sin_reducir_7 <- silhouette(hgroups_pks_data_7, dist_pks_sin_reducir)
+silueta_hgroups_pks_sin_reducir_8 <- silhouette(hgroups_pks_data_8, dist_pks_sin_reducir)
+
+
+mean_sil_pks_sin_reducir_4 <- mean_silhouette(silueta_hgroups_pks_sin_reducir_4)
+mean_sil_pks_sin_reducir_7 <- mean_silhouette(silueta_hgroups_pks_sin_reducir_7)
+mean_sil_pks_sin_reducir_8 <- mean_silhouette(silueta_hgroups_pks_sin_reducir_8)
+
+
+# TIC sin reducir
+silueta_hgroups_TIC_sin_reducir_4 <- silhouette(hgroups_normalized_data_TIC_4, dist_TIC_sin_reducir)
+silueta_hgroups_TIC_sin_reducir_7 <- silhouette(hgroups_normalized_data_TIC_7, dist_TIC_sin_reducir)
+silueta_hgroups_TIC_sin_reducir_8 <- silhouette(hgroups_normalized_data_TIC_8, dist_TIC_sin_reducir)
+
+mean_sil_TIC_sin_reducir_4 <- mean_silhouette(silueta_hgroups_TIC_sin_reducir_4)
+mean_sil_TIC_sin_reducir_7 <- mean_silhouette(silueta_hgroups_TIC_sin_reducir_7)
+mean_sil_TIC_sin_reducir_8 <- mean_silhouette(silueta_hgroups_TIC_sin_reducir_8)
+
+# RMS sin reducir
+silueta_hgroups_RMS_sin_reducir_4 <- silhouette(hgroups_normalized_data_RMS_4, dist_RMS_sin_reducir)
+silueta_hgroups_RMS_sin_reducir_7 <- silhouette(hgroups_normalized_data_RMS_7, dist_RMS_sin_reducir)
+silueta_hgroups_RMS_sin_reducir_8 <- silhouette(hgroups_normalized_data_RMS_8, dist_RMS_sin_reducir)
+
+mean_sil_RMS_sin_reducir_4 <- mean_silhouette(silueta_hgroups_RMS_sin_reducir_4)
+mean_sil_RMS_sin_reducir_7 <- mean_silhouette(silueta_hgroups_RMS_sin_reducir_7)
+mean_sil_RMS_sin_reducir_8 <- mean_silhouette(silueta_hgroups_RMS_sin_reducir_8)
+
+# MAX sin reducir
+silueta_hgroups_MAX_sin_reducir_4 <- silhouette(hgroups_normalized_data_MAX_4, dist_MAX_sin_reducir)
+silueta_hgroups_MAX_sin_reducir_7 <- silhouette(hgroups_normalized_data_MAX_7, dist_MAX_sin_reducir)
+silueta_hgroups_MAX_sin_reducir_8 <- silhouette(hgroups_normalized_data_MAX_8, dist_MAX_sin_reducir)
+
+mean_sil_MAX_sin_reducir_4 <- mean_silhouette(silueta_hgroups_MAX_sin_reducir_4)
+mean_sil_MAX_sin_reducir_7 <- mean_silhouette(silueta_hgroups_MAX_sin_reducir_7)
+mean_sil_MAX_sin_reducir_8 <- mean_silhouette(silueta_hgroups_MAX_sin_reducir_8)
+
+# Imprimir resultados
+print("Resultados para datos sin reducir dimensionalidad:")
+print(paste("Media silueta PKS sin reducir 4:", mean_sil_pks_sin_reducir_4))
+print(paste("Media silueta PKS sin reducir 7:", mean_sil_pks_sin_reducir_7))
+print(paste("Media silueta PKS sin reducir 8:", mean_sil_pks_sin_reducir_8))
+
+
+print(paste("Media silueta TIC sin reducir 4:", mean_sil_TIC_sin_reducir_4))
+print(paste("Media silueta TIC sin reducir 7:", mean_sil_TIC_sin_reducir_7))
+print(paste("Media silueta TIC sin reducir 8:", mean_sil_TIC_sin_reducir_8))
+
+print(paste("Media silueta RMS sin reducir 4:", mean_sil_RMS_sin_reducir_4))
+print(paste("Media silueta RMS sin reducir 7:", mean_sil_RMS_sin_reducir_7))
+print(paste("Media silueta RMS sin reducir 8:", mean_sil_RMS_sin_reducir_8))
+
+print(paste("Media silueta MAX sin reducir 4:", mean_sil_MAX_sin_reducir_4))
+print(paste("Media silueta MAX sin reducir 7:", mean_sil_MAX_sin_reducir_7))
+print(paste("Media silueta MAX sin reducir 8:", mean_sil_MAX_sin_reducir_8))
+# Cuarto ordenador: K-means con datos sin reducir, con rtsne2 y con rtsne3
+load("~/Desktop/TFG_AM/PCARTSNEOBJECTS.RData")
+
+# Función para calcular la media de la silueta
+mean_silhouette <- function(sil) {
+  mean(sil[, 3])
+}
+
+
+
+# K-means sin reducción de dimensionalidad
+# PKS
+silueta_pks_kmeans_sin_reducir_k4 <- silhouette(pks_kmeans_k4$cluster, dist_pks_sin_reducir)
+silueta_pks_kmeans_sin_reducir_k7 <- silhouette(pks_kmeans_k7$cluster, dist_pks_sin_reducir)
+silueta_pks_kmeans_sin_reducir_k8 <- silhouette(pks_kmeans_k8$cluster, dist_pks_sin_reducir)
+
+mean_sil_pks_kmeans_sin_reducir_k4 <- mean_silhouette(silueta_pks_kmeans_sin_reducir_k4)
+mean_sil_pks_kmeans_sin_reducir_k7 <- mean_silhouette(silueta_pks_kmeans_sin_reducir_k7)
+mean_sil_pks_kmeans_sin_reducir_k8 <- mean_silhouette(silueta_pks_kmeans_sin_reducir_k8)
+
+
+
+# TIC
+silueta_TIC_kmeans_sin_reducir_k4 <- silhouette(TIC_kmeans_k4$cluster, dist_TIC_sin_reducir)
+silueta_TIC_kmeans_sin_reducir_k7 <- silhouette(TIC_kmeans_k7$cluster, dist_TIC_sin_reducir)
+silueta_TIC_kmeans_sin_reducir_k8 <- silhouette(TIC_kmeans_k8$cluster, dist_TIC_sin_reducir)
+
+mean_sil_TIC_kmeans_sin_reducir_k4 <- mean_silhouette(silueta_TIC_kmeans_sin_reducir_k4)
+mean_sil_TIC_kmeans_sin_reducir_k7 <- mean_silhouette(silueta_TIC_kmeans_sin_reducir_k7)
+mean_sil_TIC_kmeans_sin_reducir_k8 <- mean_silhouette(silueta_TIC_kmeans_sin_reducir_k8)
+
+# RMS
+silueta_RMS_kmeans_sin_reducir_k4 <- silhouette(RMS_kmeans_k4$cluster, dist_RMS_sin_reducir)
+silueta_RMS_kmeans_sin_reducir_k7 <- silhouette(RMS_kmeans_k7$cluster, dist_RMS_sin_reducir)
+silueta_RMS_kmeans_sin_reducir_k8 <- silhouette(RMS_kmeans_k8$cluster, dist_RMS_sin_reducir)
+
+mean_sil_RMS_kmeans_sin_reducir_k4 <- mean_silhouette(silueta_RMS_kmeans_sin_reducir_k4)
+mean_sil_RMS_kmeans_sin_reducir_k7 <- mean_silhouette(silueta_RMS_kmeans_sin_reducir_k7)
+mean_sil_RMS_kmeans_sin_reducir_k8 <- mean_silhouette(silueta_RMS_kmeans_sin_reducir_k8)
+
+# MAX
+silueta_MAX_kmeans_sin_reducir_k4 <- silhouette(MAX_kmeans_k4$cluster, dist_MAX_sin_reducir)
+silueta_MAX_kmeans_sin_reducir_k7 <- silhouette(MAX_kmeans_k7$cluster, dist_MAX_sin_reducir)
+silueta_MAX_kmeans_sin_reducir_k8 <- silhouette(MAX_kmeans_k8$cluster, dist_MAX_sin_reducir)
+
+mean_sil_MAX_kmeans_sin_reducir_k4 <- mean_silhouette(silueta_MAX_kmeans_sin_reducir_k4)
+mean_sil_MAX_kmeans_sin_reducir_k7 <- mean_silhouette(silueta_MAX_kmeans_sin_reducir_k7)
+mean_sil_MAX_kmeans_sin_reducir_k8 <- mean_silhouette(silueta_MAX_kmeans_sin_reducir_k8)
+
+print("Resultados de K-means sin reducción de dimensionalidad:")
+print(paste("Media silueta PKS sin reducir K-means 4:", mean_sil_pks_kmeans_sin_reducir_k4))
+print(paste("Media silueta PKS sin reducir K-means 7:", mean_sil_pks_kmeans_sin_reducir_k7))
+print(paste("Media silueta PKS sin reducir K-means 8:", mean_sil_pks_kmeans_sin_reducir_k8))
+print(paste("Media silueta TIC sin reducir K-means 4:", mean_sil_TIC_kmeans_sin_reducir_k4))
+print(paste("Media silueta TIC sin reducir K-means 7:", mean_sil_TIC_kmeans_sin_reducir_k7))
+print(paste("Media silueta TIC sin reducir K-means 8:", mean_sil_TIC_kmeans_sin_reducir_k8))
+print(paste("Media silueta RMS sin reducir K-means 4:", mean_sil_RMS_kmeans_sin_reducir_k4))
+print(paste("Media silueta RMS sin reducir K-means 7:", mean_sil_RMS_kmeans_sin_reducir_k7))
+print(paste("Media silueta RMS sin reducir K-means 8:", mean_sil_RMS_kmeans_sin_reducir_k8))
+print(paste("Media silueta MAX sin reducir K-means 4:", mean_sil_MAX_kmeans_sin_reducir_k4))
+print(paste("Media silueta MAX sin reducir K-means 7:", mean_sil_MAX_kmeans_sin_reducir_k7))
+print(paste("Media silueta MAX sin reducir K-means 8:", mean_sil_MAX_kmeans_sin_reducir_k8))
+
+#DBSCAN
+# PKS sin reducir
+silueta_dbscan_pks_sin_reducir_4 <- silhouette(dbscan_pks$cluster, dist_pks_sin_reducir)
+mean_dbscan_pks_sin_reducir_4 <- mean_silhouette(silueta_dbscan_pks_sin_reducir_4)
+#TIC sin reducir
+silueta_dbscan_TIC_sin_reducir_4 <- silhouette(dbscan_TIC$cluster, dist_TIC_sin_reducir)
+mean_dbscan_TIC_sin_reducir_4 <- mean_silhouette(silueta_dbscan_TIC_sin_reducir_4)
+#RMS
+silueta_dbscan_RMS_sin_reducir_4 <- silhouette(dbscan_RMS$cluster, dist_RMS_sin_reducir)
+mean_dbscan_RMS_sin_reducir_4 <- mean_silhouette(silueta_dbscan_RMS_sin_reducir_4)
+#MAX
+silueta_dbscan_MAX_sin_reducir_4 <- silhouette(dbscan_MAX$cluster, dist_MAX_sin_reducir)
+mean_dbscan_MAX_sin_reducir_4 <- mean_silhouette(silueta_dbscan_MAX_sin_reducir_4)
+
+#RTSNE2 para HC, KMeans y DBSCAN:
+
+dist_pks_rtsne2 <- distancias_reducidas$PKS$tSNE2 
+dist_TIC_rtsne2 <- distancias_reducidas$TIC$tSNE2
+dist_RMS_rtsne2 <- distancias_reducidas$RMS$tSNE2
+dist_MAX_rtsne2 <- distancias_reducidas$MAX$tSNE3
+
+# rtsne2
+# PKS con rtsne2
+silueta_hgroups_rtsne2_pks_4 <- silhouette(hgroups_rtsne2_pks_4, dist_pks_rtsne2)
+silueta_hgroups_rtsne2_pks_7 <- silhouette(hgroups_rtsne2_pks_7, dist_pks_rtsne2)
+silueta_hgroups_rtsne2_pks_8 <- silhouette(hgroups_rtsne2_pks_8, dist_pks_rtsne2)
+
+mean_sil_rtsne2_pks_4 <- mean_silhouette(silueta_hgroups_rtsne2_pks_4)
+mean_sil_rtsne2_pks_7 <- mean_silhouette(silueta_hgroups_rtsne2_pks_7)
+mean_sil_rtsne2_pks_8 <- mean_silhouette(silueta_hgroups_rtsne2_pks_8)
+
+# TIC con rtsne2
+silueta_hgroups_rtsne2_tic_4 <- silhouette(hgroups_rtsne2_tic_4, dist_TIC_rtsne2)
+silueta_hgroups_rtsne2_tic_7 <- silhouette(hgroups_rtsne2_tic_7, dist_TIC_rtsne2)
+silueta_hgroups_rtsne2_tic_8 <- silhouette(hgroups_rtsne2_tic_8, dist_TIC_rtsne2)
+
+mean_sil_rtsne2_tic_4 <- mean_silhouette(silueta_hgroups_rtsne2_tic_4)
+mean_sil_rtsne2_tic_7 <- mean_silhouette(silueta_hgroups_rtsne2_tic_7)
+mean_sil_rtsne2_tic_8 <- mean_silhouette(silueta_hgroups_rtsne2_tic_8)
+
+# RMS con rtsne2
+silueta_hgroups_rtsne2_rms_4 <- silhouette(hgroups_rtsne2_rms_4, dist_RMS_rtsne2)
+silueta_hgroups_rtsne2_rms_7 <- silhouette(hgroups_rtsne2_rms_7, dist_RMS_rtsne2)
+silueta_hgroups_rtsne2_rms_8 <- silhouette(hgroups_rtsne2_rms_8, dist_RMS_rtsne2)
+
+mean_sil_rtsne2_rms_4 <- mean_silhouette(silueta_hgroups_rtsne2_rms_4)
+mean_sil_rtsne2_rms_7 <- mean_silhouette(silueta_hgroups_rtsne2_rms_7)
+mean_sil_rtsne2_rms_8 <- mean_silhouette(silueta_hgroups_rtsne2_rms_8)
+
+# MAX con rtsne2
+silueta_hgroups_rtsne2_max_4 <- silhouette(hgroups_rtsne2_max_4, dist_MAX_rtsne2)
+silueta_hgroups_rtsne2_max_7 <- silhouette(hgroups_rtsne2_max_7, dist_MAX_rtsne2)
+silueta_hgroups_rtsne2_max_8 <- silhouette(hgroups_rtsne2_max_8, dist_MAX_rtsne2)
+
+mean_sil_rtsne2_max_4 <- mean_silhouette(silueta_hgroups_rtsne2_max_4)
+mean_sil_rtsne2_max_7 <- mean_silhouette(silueta_hgroups_rtsne2_max_7)
+mean_sil_rtsne2_max_8 <- mean_silhouette(silueta_hgroups_rtsne2_max_8)
+
+# Imprimir resultados
+print("Resultados para datos con reducción rtsne2:")
+print(paste("Media silueta PKS rtsne2 4:", mean_sil_rtsne2_pks_4))
+print(paste("Media silueta PKS rtsne2 7:", mean_sil_rtsne2_pks_7))
+print(paste("Media silueta PKS rtsne2 8:", mean_sil_rtsne2_pks_8))
+
+
+
+print(paste("Media silueta TIC rtsne2 4:", mean_sil_rtsne2_tic_4))
+print(paste("Media silueta TIC rtsne2 7:", mean_sil_rtsne2_tic_7))
+print(paste("Media silueta TIC rtsne2 8:", mean_sil_rtsne2_tic_8))
+
+print(paste("Media silueta RMS rtsne2 4:", mean_sil_rtsne2_rms_4))
+print(paste("Media silueta RMS rtsne2 7:", mean_sil_rtsne2_rms_7))
+print(paste("Media silueta RMS rtsne2 8:", mean_sil_rtsne2_rms_8))
+
+print(paste("Media silueta MAX rtsne2 4:", mean_sil_rtsne2_max_4))
+print(paste("Media silueta MAX rtsne2 7:", mean_sil_rtsne2_max_7))
+print(paste("Media silueta MAX rtsne2 8:", mean_sil_rtsne2_max_8))
+
+# K-means con reducción rtsne2
+# PKS
+silueta_pks_rtsne2_kmeans_k4 <- silhouette(pks_rtsne2_KMeans_k4$cluster, dist_pks_rtsne2)
+silueta_pks_rtsne2_kmeans_k7 <- silhouette(pks_rtsne2_KMeans_k7$cluster, dist_pks_rtsne2)
+silueta_pks_rtsne2_kmeans_k8 <- silhouette(pks_rtsne2_KMeans_k8$cluster, dist_pks_rtsne2)
+
+mean_sil_pks_rtsne2_kmeans_k4 <- mean_silhouette(silueta_pks_rtsne2_kmeans_k4)
+mean_sil_pks_rtsne2_kmeans_k7 <- mean_silhouette(silueta_pks_rtsne2_kmeans_k7)
+mean_sil_pks_rtsne2_kmeans_k8 <- mean_silhouette(silueta_pks_rtsne2_kmeans_k8)
+
+
+# TIC
+silueta_TIC_rtsne2_kmeans_k4 <- silhouette(TIC_rtsne2_KMeans_k4$cluster, dist_TIC_rtsne2)
+silueta_TIC_rtsne2_kmeans_k7 <- silhouette(TIC_rtsne2_KMeans_k7$cluster, dist_TIC_rtsne2)
+silueta_TIC_rtsne2_kmeans_k8 <- silhouette(TIC_rtsne2_KMeans_k8$cluster, dist_TIC_rtsne2)
+
+mean_sil_TIC_rtsne2_kmeans_k4 <- mean_silhouette(silueta_TIC_rtsne2_kmeans_k4)
+mean_sil_TIC_rtsne2_kmeans_k7 <- mean_silhouette(silueta_TIC_rtsne2_kmeans_k7)
+mean_sil_TIC_rtsne2_kmeans_k8 <- mean_silhouette(silueta_TIC_rtsne2_kmeans_k8)
+
+# RMS
+silueta_RMS_rtsne2_kmeans_k4 <- silhouette(RMS_rtsne2_KMeans_k4$cluster, dist_RMS_rtsne2)
+silueta_RMS_rtsne2_kmeans_k7 <- silhouette(RMS_rtsne2_KMeans_k7$cluster, dist_RMS_rtsne2)
+silueta_RMS_rtsne2_kmeans_k8 <- silhouette(RMS_rtsne2_KMeans_k8$cluster, dist_RMS_rtsne2)
+
+mean_sil_RMS_rtsne2_kmeans_k4 <- mean_silhouette(silueta_RMS_rtsne2_kmeans_k4)
+mean_sil_RMS_rtsne2_kmeans_k7 <- mean_silhouette(silueta_RMS_rtsne2_kmeans_k7)
+mean_sil_RMS_rtsne2_kmeans_k8 <- mean_silhouette(silueta_RMS_rtsne2_kmeans_k8)
+
+# MAX
+silueta_MAX_rtsne2_kmeans_k4 <- silhouette(MAX_rtsne2_KMeans_k4$cluster, dist_MAX_rtsne2)
+silueta_MAX_rtsne2_kmeans_k7 <- silhouette(MAX_rtsne2_KMeans_k7$cluster, dist_MAX_rtsne2)
+silueta_MAX_rtsne2_kmeans_k8 <- silhouette(MAX_rtsne2_KMeans_k8$cluster, dist_MAX_rtsne2)
+
+mean_sil_MAX_rtsne2_kmeans_k4 <- mean_silhouette(silueta_MAX_rtsne2_kmeans_k4)
+mean_sil_MAX_rtsne2_kmeans_k7 <- mean_silhouette(silueta_MAX_rtsne2_kmeans_k7)
+mean_sil_MAX_rtsne2_kmeans_k8 <- mean_silhouette(silueta_MAX_rtsne2_kmeans_k8)
+
+print("\nResultados de K-means con reducción rtsne2:")
+print(paste("Media silueta PKS rtsne2 K-means 4:", mean_sil_pks_rtsne2_kmeans_k4))
+print(paste("Media silueta PKS rtsne2 K-means 7:", mean_sil_pks_rtsne2_kmeans_k7))
+print(paste("Media silueta PKS rtsne2 K-means 8:", mean_sil_pks_rtsne2_kmeans_k8))
+print(paste("Media silueta TIC rtsne2 K-means 4:", mean_sil_TIC_rtsne2_kmeans_k4))
+print(paste("Media silueta TIC rtsne2 K-means 7:", mean_sil_TIC_rtsne2_kmeans_k7))
+print(paste("Media silueta TIC rtsne2 K-means 8:", mean_sil_TIC_rtsne2_kmeans_k8))
+print(paste("Media silueta RMS rtsne2 K-means 4:", mean_sil_RMS_rtsne2_kmeans_k4))
+print(paste("Media silueta RMS rtsne2 K-means 7:", mean_sil_RMS_rtsne2_kmeans_k7))
+print(paste("Media silueta RMS rtsne2 K-means 8:", mean_sil_RMS_rtsne2_kmeans_k8))
+print(paste("Media silueta MAX rtsne2 K-means 4:", mean_sil_MAX_rtsne2_kmeans_k4))
+print(paste("Media silueta MAX rtsne2 K-means 7:", mean_sil_MAX_rtsne2_kmeans_k7))
+print(paste("Media silueta MAX rtsne2 K-means 8:", mean_sil_MAX_rtsne2_kmeans_k8))
+
+#DBSCAN: 
+#DBSCAN
+# PKS sin reducir
+silueta_dbscan_pks_rtsne2_4 <- silhouette(dbscan_RTSNE2_pks$cluster, dist_pks_rtsne2)
+mean_dbscan_pks_rtsne2_4 <- mean_silhouette(silueta_dbscan_pks_rtsne2_4)
+#TIC sin reducir
+silueta_dbscan_TIC_rtsne2_4 <- silhouette(dbscan_RTSNE2_TIC$cluster, dist_TIC_rtsne2)
+mean_dbscan_TIC_rtsne2_4 <- mean_silhouette(silueta_dbscan_TIC_rtsne2_4)
+#RMS
+silueta_dbscan_RMS_rtsne2_4 <- silhouette(dbscan_RTSNE2_RMS$cluster, dist_RMS_rtsne2) 
+mean_dbscan_RMS_rtsne2_4 <- mean_silhouette(silueta_dbscan_RMS_rtsne2_4)
+#MAX
+silueta_dbscan_MAX_rtsne2_4 <- silhouette(dbscan_RTSNE2_MAX$cluster, dist_MAX_rtsne2)
+mean_dbscan_MAX_rtsne2_4 <- mean_silhouette(silueta_dbscan_MAX_rtsne2_4)
+
+
+# rtsne3
+dist_pks_rtsne3 <- distancias_reducidas$PKS$tSNE3
+dist_TIC_rtsne3 <- distancias_reducidas$TIC$tSNE3
+dist_RMS_rtsne3 <- distancias_reducidas$RMS$tSNE3
+dist_MAX_rtsne3 <- distancias_reducidas$MAX$tSNE3
+
+# PKS con rtsne3
+silueta_hgroups_rtsne3_pks_4 <- silhouette(hgroups_rtsne3_pks_4, dist_pks_rtsne3)
+silueta_hgroups_rtsne3_pks_7 <- silhouette(hgroups_rtsne3_pks_7, dist_pks_rtsne3)
+silueta_hgroups_rtsne3_pks_8 <- silhouette(hgroups_rtsne3_pks_8, dist_pks_rtsne3)
+
+mean_sil_rtsne3_pks_4 <- mean_silhouette(silueta_hgroups_rtsne3_pks_4)
+mean_sil_rtsne3_pks_7 <- mean_silhouette(silueta_hgroups_rtsne3_pks_7)
+mean_sil_rtsne3_pks_8 <- mean_silhouette(silueta_hgroups_rtsne3_pks_8)
+
+
+
+# TIC con rtsne3
+silueta_hgroups_rtsne3_tic_4 <- silhouette(hgroups_rtsne3_tic_4, dist_TIC_rtsne3)
+silueta_hgroups_rtsne3_tic_7 <- silhouette(hgroups_rtsne3_tic_7, dist_TIC_rtsne3)
+silueta_hgroups_rtsne3_tic_8 <- silhouette(hgroups_rtsne3_tic_8, dist_TIC_rtsne3)
+
+
+mean_sil_rtsne3_tic_4 <- mean_silhouette(silueta_hgroups_rtsne3_tic_4)
+mean_sil_rtsne3_tic_7 <- mean_silhouette(silueta_hgroups_rtsne3_tic_7)
+mean_sil_rtsne3_tic_8 <- mean_silhouette(silueta_hgroups_rtsne3_tic_8)
+
+# RMS con rtsne3
+silueta_hgroups_rtsne3_rms_4 <- silhouette(hgroups_rtsne3_rms_4, dist_RMS_rtsne3)
+silueta_hgroups_rtsne3_rms_7 <- silhouette(hgroups_rtsne3_rms_7, dist_RMS_rtsne3)
+silueta_hgroups_rtsne3_rms_8 <- silhouette(hgroups_rtsne3_rms_8, dist_RMS_rtsne3)
+
+mean_sil_rtsne3_rms_4 <- mean_silhouette(silueta_hgroups_rtsne3_rms_4)
+mean_sil_rtsne3_rms_7 <- mean_silhouette(silueta_hgroups_rtsne3_rms_7)
+mean_sil_rtsne3_rms_8 <- mean_silhouette(silueta_hgroups_rtsne3_rms_8)
+
+# MAX con rtsne3
+silueta_hgroups_rtsne3_max_4 <- silhouette(hgroups_rtsne3_max_4, dist_MAX_rtsne3)
+silueta_hgroups_rtsne3_max_7 <- silhouette(hgroups_rtsne3_max_7, dist_MAX_rtsne3)
+silueta_hgroups_rtsne3_max_8 <- silhouette(hgroups_rtsne3_max_8, dist_MAX_rtsne3)
+
+mean_sil_rtsne3_max_4 <- mean_silhouette(silueta_hgroups_rtsne3_max_4)
+mean_sil_rtsne3_max_7 <- mean_silhouette(silueta_hgroups_rtsne3_max_7)
+mean_sil_rtsne3_max_8 <- mean_silhouette(silueta_hgroups_rtsne3_max_8)
+
+print("\nResultados para datos con reducción rtsne3:")
+print(paste("Media silueta PKS rtsne3 4:", mean_sil_rtsne3_pks_4))
+print(paste("Media silueta PKS rtsne3 7:", mean_sil_rtsne3_pks_7))
+print(paste("Media silueta PKS rtsne3 8:", mean_sil_rtsne3_pks_8))
+
+
+print(paste("Media silueta TIC rtsne3 4:", mean_sil_rtsne3_tic_4))
+print(paste("Media silueta TIC rtsne3 7:", mean_sil_rtsne3_tic_7))
+print(paste("Media silueta TIC rtsne3 8:", mean_sil_rtsne3_tic_8))
+
+print(paste("Media silueta RMS rtsne3 4:", mean_sil_rtsne3_rms_4))
+print(paste("Media silueta RMS rtsne3 7:", mean_sil_rtsne3_rms_7))
+print(paste("Media silueta RMS rtsne3 8:", mean_sil_rtsne3_rms_8))
+
+print(paste("Media silueta MAX rtsne3 4:", mean_sil_rtsne3_max_4))
+print(paste("Media silueta MAX rtsne3 7:", mean_sil_rtsne3_max_7))
+print(paste("Media silueta MAX rtsne3 8:", mean_sil_rtsne3_max_8))
+
+# K-means con reducción rtsne3
+# PKS
+silueta_pks_rtsne3_kmeans_k4 <- silhouette(pks_rtsne3_KMeans_k4$cluster, dist_pks_rtsne3)
+silueta_pks_rtsne3_kmeans_k7 <- silhouette(pks_rtsne3_KMeans_k7$cluster, dist_pks_rtsne3)
+silueta_pks_rtsne3_kmeans_k8 <- silhouette(pks_rtsne3_KMeans_k8$cluster, dist_pks_rtsne3)
+
+mean_sil_pks_rtsne3_kmeans_k4 <- mean_silhouette(silueta_pks_rtsne3_kmeans_k4)
+mean_sil_pks_rtsne3_kmeans_k7 <- mean_silhouette(silueta_pks_rtsne3_kmeans_k7)
+mean_sil_pks_rtsne3_kmeans_k8 <- mean_silhouette(silueta_pks_rtsne3_kmeans_k8)
+
+
+# TIC
+silueta_TIC_rtsne3_kmeans_k4 <- silhouette(TIC_rtsne3_KMeans_k4$cluster, dist_TIC_rtsne3)
+silueta_TIC_rtsne3_kmeans_k7 <- silhouette(TIC_rtsne3_KMeans_k7$cluster, dist_TIC_rtsne3)
+silueta_TIC_rtsne3_kmeans_k8 <- silhouette(TIC_rtsne3_KMeans_k8$cluster, dist_TIC_rtsne3)
+
+mean_sil_TIC_rtsne3_kmeans_k4 <- mean_silhouette(silueta_TIC_rtsne3_kmeans_k4)
+mean_sil_TIC_rtsne3_kmeans_k7 <- mean_silhouette(silueta_TIC_rtsne3_kmeans_k7)
+mean_sil_TIC_rtsne3_kmeans_k8 <- mean_silhouette(silueta_TIC_rtsne3_kmeans_k8)
+
+# RMS
+silueta_RMS_rtsne3_kmeans_k4 <- silhouette(RMS_rtsne3_KMeans_k4$cluster, dist_RMS_rtsne3)
+silueta_RMS_rtsne3_kmeans_k7 <- silhouette(RMS_rtsne3_KMeans_k7$cluster, dist_RMS_rtsne3)
+silueta_RMS_rtsne3_kmeans_k8 <- silhouette(RMS_rtsne3_KMeans_k8$cluster, dist_RMS_rtsne3)
+
+mean_sil_RMS_rtsne3_kmeans_k4 <- mean_silhouette(silueta_RMS_rtsne3_kmeans_k4)
+mean_sil_RMS_rtsne3_kmeans_k7 <- mean_silhouette(silueta_RMS_rtsne3_kmeans_k7)
+mean_sil_RMS_rtsne3_kmeans_k8 <- mean_silhouette(silueta_RMS_rtsne3_kmeans_k8)
+
+# MAX 
+silueta_MAX_rtsne3_kmeans_k4 <- silhouette(MAX_rtsne3_KMeans_k4$cluster, dist_MAX_rtsne3)
+silueta_MAX_rtsne3_kmeans_k7 <- silhouette(MAX_rtsne3_KMeans_k7$cluster, dist_MAX_rtsne3)
+silueta_MAX_rtsne3_kmeans_k8 <- silhouette(MAX_rtsne3_KMeans_k8$cluster, dist_MAX_rtsne3)
+
+mean_sil_MAX_rtsne3_kmeans_k4 <- mean_silhouette(silueta_MAX_rtsne3_kmeans_k4)
+mean_sil_MAX_rtsne3_kmeans_k7 <- mean_silhouette(silueta_MAX_rtsne3_kmeans_k7)
+mean_sil_MAX_rtsne3_kmeans_k8 <- mean_silhouette(silueta_MAX_rtsne3_kmeans_k8)
+
+print("\nResultados de K-means con reducción rtsne3:")
+print(paste("Media silueta PKS rtsne3 K-means 4:", mean_sil_pks_rtsne3_kmeans_k4))
+print(paste("Media silueta PKS rtsne3 K-means 7:", mean_sil_pks_rtsne3_kmeans_k7))
+print(paste("Media silueta PKS rtsne3 K-means 8:", mean_sil_pks_rtsne3_kmeans_k8))
+
+print(paste("Media silueta TIC rtsne3 K-means 4:", mean_sil_TIC_rtsne3_kmeans_k4))
+print(paste("Media silueta TIC rtsne3 K-means 7:", mean_sil_TIC_rtsne3_kmeans_k7))
+print(paste("Media silueta TIC rtsne3 K-means 8:", mean_sil_TIC_rtsne3_kmeans_k8))
+print(paste("Media silueta RMS rtsne3 K-means 4:", mean_sil_RMS_rtsne3_kmeans_k4))
+print(paste("Media silueta RMS rtsne3 K-means 7:", mean_sil_RMS_rtsne3_kmeans_k7))
+print(paste("Media silueta RMS rtsne3 K-means 8:", mean_sil_RMS_rtsne3_kmeans_k8))
+print(paste("Media silueta MAX rtsne3 K-means 4:", mean_sil_MAX_rtsne3_kmeans_k4))
+print(paste("Media silueta MAX rtsne3 K-means 7:", mean_sil_MAX_rtsne3_kmeans_k7))
+print(paste("Media silueta MAX rtsne3 K-means 8:", mean_sil_MAX_rtsne3_kmeans_k8))
+
+# PKS sin reducir
+silueta_dbscan_pks_rtsne3_4 <- silhouette(dbscan_RTSNE3_pks, dist_pks_rtsne3)
+mean_dbscan_pks_rtsne3_4 <- mean_silhouette(silueta_dbscan_pks_rtsne3_4)
+
+# TIC sin reducir
+silueta_dbscan_TIC_rtsne3_4 <- silhouette(dbscan_RTSNE3_TIC, dist_TIC_rtsne3)
+mean_dbscan_TIC_rtsne3_4 <- mean_silhouette(silueta_dbscan_TIC_rtsne3_4)
+
+# RMS
+silueta_dbscan_RMS_rtsne3_4 <- silhouette(dbscan_RTSNE3_RMS, dist_RMS_rtsne3)
+mean_dbscan_RMS_rtsne3_4 <- mean_silhouette(silueta_dbscan_RMS_rtsne3_4)
+
+# MAX
+silueta_dbscan_MAX_rtsne3_4 <- silhouette(dbscan_RTSNE3_MAX, dist_MAX_rtsne3)
+mean_dbscan_MAX_rtsne3_4 <- mean_silhouette(silueta_dbscan_MAX_rtsne3_4)
+
+# Función para calcular la media de la silueta
+mean_silhouette <- function(sil) {
+  mean(sil[, 3])
+}
+
+# Calcular distancias una sola vez
+dist_pks <- distancias_reducidas$PKS$UMAP
+dist_TIC <- distancias_reducidas$TIC$UMAP
+dist_RMS <- distancias_reducidas$RMS$UMAP
+dist_MAX <- distancias_reducidas$MAX$UMAP
+
+
+# PKS con UMAP
+silueta_hgroups_umap_pks_4 <- silhouette(hgroups_umap_pks_4, dist_pks)
+silueta_hgroups_umap_pks_7 <- silhouette(hgroups_umap_pks_7, dist_pks)
+silueta_hgroups_umap_pks_8 <- silhouette(hgroups_umap_pks_8, dist_pks)
+
+mean_sil_umap_pks_4 <- mean_silhouette(silueta_hgroups_umap_pks_4)
+mean_sil_umap_pks_7 <- mean_silhouette(silueta_hgroups_umap_pks_7)
+mean_sil_umap_pks_8 <- mean_silhouette(silueta_hgroups_umap_pks_8)
+
+
+
+
+# TIC con UMAP
+silueta_hgroups_umap_tic_4 <- silhouette(hgroups_umap_tic_4, dist_TIC)
+silueta_hgroups_umap_tic_7 <- silhouette(hgroups_umap_tic_7, dist_TIC)
+silueta_hgroups_umap_tic_8 <- silhouette(hgroups_umap_tic_8, dist_TIC)
+
+mean_sil_umap_tic_4 <- mean_silhouette(silueta_hgroups_umap_tic_4)
+mean_sil_umap_tic_7 <- mean_silhouette(silueta_hgroups_umap_tic_7)
+mean_sil_umap_tic_8 <- mean_silhouette(silueta_hgroups_umap_tic_8)
+
+# RMS con UMAP
+silueta_hgroups_umap_rms_4 <- silhouette(hgroups_umap_rms_4, dist_RMS)
+silueta_hgroups_umap_rms_7 <- silhouette(hgroups_umap_rms_7, dist_RMS)
+silueta_hgroups_umap_rms_8 <- silhouette(hgroups_umap_rms_8, dist_RMS)
+
+mean_sil_umap_rms_4 <- mean_silhouette(silueta_hgroups_umap_rms_4)
+mean_sil_umap_rms_7 <- mean_silhouette(silueta_hgroups_umap_rms_7)
+mean_sil_umap_rms_8 <- mean_silhouette(silueta_hgroups_umap_rms_8)
+
+# MAX con UMAP
+silueta_hgroups_umap_max_4 <- silhouette(hgroups_umap_max_4, dist_MAX)
+silueta_hgroups_umap_max_7 <- silhouette(hgroups_umap_max_7, dist_MAX)
+silueta_hgroups_umap_max_8 <- silhouette(hgroups_umap_max_8, dist_MAX)
+
+mean_sil_umap_max_4 <- mean_silhouette(silueta_hgroups_umap_max_4)
+mean_sil_umap_max_7 <- mean_silhouette(silueta_hgroups_umap_max_7)
+mean_sil_umap_max_8 <- mean_silhouette(silueta_hgroups_umap_max_8)
+
+# Imprimir resultados
+print("Resultados para datos con reducción UMAP:")
+print(paste("Media silueta PKS UMAP 4:", mean_sil_umap_pks_4))
+print(paste("Media silueta PKS UMAP 7:", mean_sil_umap_pks_7))
+print(paste("Media silueta PKS UMAP 8:", mean_sil_umap_pks_8))
+
+
+
+print(paste("Media silueta TIC UMAP 4:", mean_sil_umap_tic_4))
+print(paste("Media silueta TIC UMAP 7:", mean_sil_umap_tic_7))
+print(paste("Media silueta TIC UMAP 8:", mean_sil_umap_tic_8))
+
+print(paste("Media silueta RMS UMAP 4:", mean_sil_umap_rms_4))
+print(paste("Media silueta RMS UMAP 7:", mean_sil_umap_rms_7))
+print(paste("Media silueta RMS UMAP 8:", mean_sil_umap_rms_8))
+
+print(paste("Media silueta MAX UMAP 4:", mean_sil_umap_max_4))
+print(paste("Media silueta MAX UMAP 7:", mean_sil_umap_max_7))
+print(paste("Media silueta MAX UMAP 8:", mean_sil_umap_max_8))
+
+# Función para calcular la media de la silueta
+mean_silhouette <- function(sil) {
+  mean(sil[, 3])
+}
+
+# PKS con UMAP
+silueta_pks_umap_kmeans_k4 <- silhouette(pks_umap_kmeans_k4$cluster, dist_pks)
+silueta_pks_umap_kmeans_k7 <- silhouette(pks_umap_kmeans_k7$cluster, dist_pks)
+silueta_pks_umap_kmeans_k8 <- silhouette(pks_umap_kmeans_k8$cluster, dist_pks)
+
+mean_sil_pks_umap_kmeans_k4 <- mean_silhouette(silueta_pks_umap_kmeans_k4)
+mean_sil_pks_umap_kmeans_k7 <- mean_silhouette(silueta_pks_umap_kmeans_k7)
+mean_sil_pks_umap_kmeans_k8 <- mean_silhouette(silueta_pks_umap_kmeans_k8)
+
+
+
+# TIC con UMAP
+silueta_TIC_umap_kmeans_k4 <- silhouette(TIC_umap_kmeans_k4$cluster, dist_TIC)
+silueta_TIC_umap_kmeans_k7 <- silhouette(TIC_umap_kmeans_k7$cluster, dist_TIC)
+silueta_TIC_umap_kmeans_k8 <- silhouette(TIC_umap_kmeans_k8$cluster, dist_TIC)
+
+mean_sil_TIC_umap_kmeans_k4 <- mean_silhouette(silueta_TIC_umap_kmeans_k4)
+mean_sil_TIC_umap_kmeans_k7 <- mean_silhouette(silueta_TIC_umap_kmeans_k7)
+mean_sil_TIC_umap_kmeans_k8 <- mean_silhouette(silueta_TIC_umap_kmeans_k8)
+
+# RMS con UMAP
+silueta_RMS_umap_kmeans_k4 <- silhouette(RMS_umap_kmeans_k4$cluster, dist_RMS)
+silueta_RMS_umap_kmeans_k7 <- silhouette(RMS_umap_kmeans_k7$cluster, dist_RMS)
+silueta_RMS_umap_kmeans_k8 <- silhouette(RMS_umap_kmeans_k8$cluster, dist_RMS)
+
+mean_sil_RMS_umap_kmeans_k4 <- mean_silhouette(silueta_RMS_umap_kmeans_k4)
+mean_sil_RMS_umap_kmeans_k7 <- mean_silhouette(silueta_RMS_umap_kmeans_k7)
+mean_sil_RMS_umap_kmeans_k8 <- mean_silhouette(silueta_RMS_umap_kmeans_k8)
+
+# MAX con UMAP
+silueta_MAX_umap_kmeans_k4 <- silhouette(MAX_umap_kmeans_k4$cluster, dist_MAX)
+silueta_MAX_umap_kmeans_k7 <- silhouette(MAX_umap_kmeans_k7$cluster, dist_MAX)
+silueta_MAX_umap_kmeans_k8 <- silhouette(MAX_umap_kmeans_k8$cluster, dist_MAX)
+
+mean_sil_MAX_umap_kmeans_k4 <- mean_silhouette(silueta_MAX_umap_kmeans_k4)
+mean_sil_MAX_umap_kmeans_k7 <- mean_silhouette(silueta_MAX_umap_kmeans_k7)
+mean_sil_MAX_umap_kmeans_k8 <- mean_silhouette(silueta_MAX_umap_kmeans_k8)
+
+# Imprimir resultados
+print("Resultados de K-means con reducción UMAP:")
+print(paste("Media silueta PKS UMAP K-means 4:", mean_sil_pks_umap_kmeans_k4))
+print(paste("Media silueta PKS UMAP K-means 7:", mean_sil_pks_umap_kmeans_k7))
+print(paste("Media silueta PKS UMAP K-means 8:", mean_sil_pks_umap_kmeans_k8))
+print(paste("Media silueta TIC UMAP K-means 4:", mean_sil_TIC_umap_kmeans_k4))
+print(paste("Media silueta TIC UMAP K-means 7:", mean_sil_TIC_umap_kmeans_k7))
+print(paste("Media silueta TIC UMAP K-means 8:", mean_sil_TIC_umap_kmeans_k8))
+print(paste("Media silueta RMS UMAP K-means 4:", mean_sil_RMS_umap_kmeans_k4))
+print(paste("Media silueta RMS UMAP K-means 7:", mean_sil_RMS_umap_kmeans_k7))
+print(paste("Media silueta RMS UMAP K-means 8:", mean_sil_RMS_umap_kmeans_k8))
+print(paste("Media silueta MAX UMAP K-means 4:", mean_sil_MAX_umap_kmeans_k4))
+print(paste("Media silueta MAX UMAP K-means 7:", mean_sil_MAX_umap_kmeans_k7))
+print(paste("Media silueta MAX UMAP K-means 8:", mean_sil_MAX_umap_kmeans_k8))
+
+# PKS sin reducir
+silueta_dbscan_pks_umap_4 <- silhouette(dbscan_UMAP_pks, dist_pks) 
+mean_dbscan_pks_umap_4 <- mean_silhouette(silueta_dbscan_pks_umap_4)
+# TIC sin reducir
+silueta_dbscan_TIC_umap_4 <- silhouette(dbscan_UMAP_TIC, dist_TIC)
+mean_dbscan_TIC_umap_4 <- mean_silhouette(silueta_dbscan_TIC_umap_4)
+# RMS
+silueta_dbscan_RMS_umap_4 <- silhouette(dbscan_UMAP_RMS, dist_RMS)
+mean_dbscan_RMS_umap_4 <- mean_silhouette(silueta_dbscan_RMS_umap_4)
+# MAX
+silueta_dbscan_MAX_umap_4 <- silhouette(dbscan_UMAP_MAX, dist_MAX)
+mean_dbscan_MAX_umap_4 <- mean_silhouette(silueta_dbscan_MAX_umap_4)
+
+#PCA4 con HC,KM y DBSCAN: 
+# Calcular distancias una sola vez
+dist_pks_PCA4 <- distancias_reducidas$PKS$PCA4
+dist_TIC_PCA4 <- distancias_reducidas$TIC$PCA4
+dist_RMS_PCA4 <- distancias_reducidas$RMS$PCA4
+dist_MAX_PCA4 <- distancias_reducidas$MAX$PCA4
+
+#HC con PCA4: 
+
+# PKS con UMAP
+silueta_hgroups_pca4_pks_4 <- silhouette(hgroups_pca4_pks_2  dist_pks_PCA4)
+silueta_hgroups_pca4_pks_7 <- silhouette(hgroups_pca4_pks_4, dist_pks_PCA4)
+silueta_hgroups_pca4_pks_8 <- silhouette(hgroups_pca4_pks_8, dist_pks_PCA4)
+
+mean_sil_pca4_pks_4 <- mean_silhouette(silueta_hgroups_pca4_pks_4)
+mean_sil_pca4_pks_7 <- mean_silhouette(silueta_hgroups_pca4_pks_7)
+mean_sil_pca4_pks_8 <- mean_silhouette(silueta_hgroups_pca4_pks_8)
+
+# TIC con UMAP
+# PKS con UMAP
+silueta_hgroups_pca4_tic_4 <- silhouette(hgroups_pca4_tic_2, dist_TIC_PCA4)
+silueta_hgroups_pca4_tic_7 <- silhouette(hgroups_pca4_tic_4, dist_TIC_PCA4)
+silueta_hgroups_pca4_tic_8 <- silhouette(hgroups_pca4_tic_8, dist_TIC_PCA4)
+
+mean_sil_pca4_tic_4 <- mean_silhouette(silueta_hgroups_pca4_tic_4)
+mean_sil_pca4_tic_7 <- mean_silhouette(silueta_hgroups_pca4_tic_7)
+mean_sil_pca4_tic_8 <- mean_silhouette(silueta_hgroups_pca4_tic_8)
+
+# RMS con UMAP
+silueta_hgroups_pca4_rms_4 <- silhouette(hgroups_pca4_rms_2, dist_rms_PCA4)
+silueta_hgroups_pca4_rms_7 <- silhouette(hgroups_pca4_rms_4, dist_rms_PCA4)
+silueta_hgroups_pca4_rms_8 <- silhouette(hgroups_pca4_rms_8, dist_rms_PCA4)
+
+mean_sil_pca4_rms_4 <- mean_silhouette(silueta_hgroups_pca4_rms_4)
+mean_sil_pca4_rms_7 <- mean_silhouette(silueta_hgroups_pca4_rms_7)
+mean_sil_pca4_rms_8 <- mean_silhouette(silueta_hgroups_pca4_rms_8)
+
+
+# MAX con UMAP
+# PKS con UMAP
+silueta_hgroups_pca4_max_4 <- silhouette(hgroups_pca4_max_2, dist_max_PCA4)
+silueta_hgroups_pca4_max_7 <- silhouette(hgroups_pca4_max_4, dist_max_PCA4)
+silueta_hgroups_pca4_max_8 <- silhouette(hgroups_pca4_max_8, dist_max_PCA4)
+
+mean_sil_pca4_max_4 <- mean_silhouette(silueta_hgroups_pca4_max_4)
+mean_sil_pca4_max_7 <- mean_silhouette(silueta_hgroups_pca4_max_7)
+mean_sil_pca4_max_8 <- mean_silhouette(silueta_hgroups_pca4_max_8)
+
+#KM con PCA4: 
+# TIC con KM
+silueta_pks_pca4_kmeans_k4 <- silhouette(pks_pca4_kmeans_k4$cluster, dist_pks_PCA4) 
+silueta_pks_pca4_kmeans_k7 <- silhouette(pks_pca4_kmeans_k7$cluster, dist_pks_PCA4)
+silueta_pks_pca4_kmeans_k8 <- silhouette(pks_pca4_kmeans_k8$cluster, dist_pks_PCA4)
+
+mean_sil_pks_pca4_kmeans_k4 <- mean_silhouette(silueta_pks_pca4_kmeans_k4)
+mean_sil_pks_pca4_kmeans_k7 <- mean_silhouette(silueta_pks_pca4_kmeans_k7)
+mean_sil_pks_pca4_kmeans_k8 <- mean_silhouette(silueta_pks_pca4_kmeans_k8)
+
+silueta_tic_pca4_kmeans_k4 <- silhouette(TIC_pca4_kmeans_k4$cluster, dist_TIC_PCA4) 
+silueta_tic_pca4_kmeans_k7 <- silhouette(TIC_pca4_kmeans_k7$cluster, dist_TIC_PCA4)
+silueta_tic_pca4_kmeans_k8 <- silhouette(TIC_pca4_kmeans_k8$cluster, dist_TIC_PCA4)
+
+mean_sil_tic_pca4_kmeans_k4 <- mean_silhouette(silueta_TIC_pca4_kmeans_k4)
+mean_sil_tic_pca4_kmeans_k7 <- mean_silhouette(silueta_TIC_pca4_kmeans_k7)
+mean_sil_tic_pca4_kmeans_k8 <- mean_silhouette(silueta_TIC_pca4_kmeans_k8)
+
+silueta_rms_pca4_kmeans_k4 <- silhouette(RMS_pca4_kmeans_k4$cluster, dist_RMS_PCA4) 
+silueta_rms_pca4_kmeans_k7 <- silhouette(RMS_pca4_kmeans_k7$cluster, dist_RMS_PCA4)
+silueta_rms_pca4_kmeans_k8 <- silhouette(RMS_pca4_kmeans_k8$cluster, dist_RMS_PCA4)
+
+mean_sil_rms_pca4_kmeans_k4 <- mean_silhouette(silueta_RMS_pca4_kmeans_k4)
+mean_sil_rms_pca4_kmeans_k7 <- mean_silhouette(silueta_RMS_pca4_kmeans_k7)
+mean_sil_rms_pca4_kmeans_k8 <- mean_silhouette(silueta_RMS_pca4_kmeans_k8)
+
+silueta_max_pca4_kmeans_k4 <- silhouette(MAX_pca4_kmeans_k4$cluster, dist_MAX_PCA4) 
+silueta_max_pca4_kmeans_k7 <- silhouette(MAX_pca4_kmeans_k7$cluster, dist_MAX_PCA4)
+silueta_max_pca4_kmeans_k8 <- silhouette(MAX_pca4_kmeans_k8$cluster, dist_MAX_PCA4)
+
+mean_sil_max_pca4_kmeans_k4 <- mean_silhouette(silueta_MAX_pca4_kmeans_k4)
+mean_sil_max_pca4_kmeans_k7 <- mean_silhouette(silueta_MAX_pca4_kmeans_k7)
+mean_sil_max_pca4_kmeans_k8 <- mean_silhouette(silueta_MAX_pca4_kmeans_k8)
+
+#DBSCAN con PCA4: 
+# PKS sin reducir
+silueta_dbscan_pks_pca4_4 <- silhouette(dbscan_PCA4_pks, dist_pks_PCA4) 
+mean_dbscan_pca4_pca4_4 <- mean_silhouette(silueta_dbscan_pks_pca4_4)
+# TIC sin reducir
+silueta_dbscan_TIC_umap_4 <- silhouette(dbscan_PCA4_TIC, dist_TIC_PCA4)
+mean_dbscan_TIC_pca4_4 <- mean_silhouette(silueta_dbscan_TIC_pca4_4)
+# RMS
+silueta_dbscan_RMS_umap_4 <- silhouette(dbscan_PCA4_RMS, dist_RMS_PCA4)
+mean_dbscan_RMS_pca4_4 <- mean_silhouette(silueta_dbscan_RMS_pca4_4)
+# MAX
+silueta_dbscan_MAX_umap_4 <- silhouette(dbscan_PCA4_MAX, dist_MAX_PCA4)
+mean_dbscan_MAX_pca4_4 <- mean_silhouette(silueta_dbscan_MAX_pca4_4)
+
+#PCA100: 
+
+#PCA100 con HC, KM y DBSCAN: 
+# Calcular distancias una sola vez
+dist_pks_PCA100 <- distancias_reducidas$PKS$PCA100
+dist_TIC_PCA100 <- distancias_reducidas$TIC$PCA100
+dist_RMS_PCA100 <- distancias_reducidas$RMS$PCA100
+dist_MAX_PCA100 <- distancias_reducidas$MAX$PCA100
+
+#HC con PCA100: 
+
+# PKS con UMAP
+silueta_hgroups_pca100_pks_4 <- silhouette(hgroups_pca100_pks_2, dist_pks_PCA100)
+silueta_hgroups_pca100_pks_7 <- silhouette(hgroups_pca100_pks_4, dist_pks_PCA100)
+silueta_hgroups_pca100_pks_8 <- silhouette(hgroups_pca100_pks_8, dist_pks_PCA100)
+
+mean_sil_pca100_pks_4 <- mean_silhouette(silueta_hgroups_pca100_pks_4)
+mean_sil_pca100_pks_7 <- mean_silhouette(silueta_hgroups_pca100_pks_7)
+mean_sil_pca100_pks_8 <- mean_silhouette(silueta_hgroups_pca100_pks_8)
+
+# TIC con UMAP
+silueta_hgroups_pca100_tic_4 <- silhouette(hgroups_pca100_tic_2, dist_TIC_PCA100)
+silueta_hgroups_pca100_tic_7 <- silhouette(hgroups_pca100_tic_4, dist_TIC_PCA100)
+silueta_hgroups_pca100_tic_8 <- silhouette(hgroups_pca100_tic_8, dist_TIC_PCA100)
+
+mean_sil_pca100_tic_4 <- mean_silhouette(silueta_hgroups_pca100_tic_4)
+mean_sil_pca100_tic_7 <- mean_silhouette(silueta_hgroups_pca100_tic_7)
+mean_sil_pca100_tic_8 <- mean_silhouette(silueta_hgroups_pca100_tic_8)
+
+# RMS con UMAP
+silueta_hgroups_pca100_rms_4 <- silhouette(hgroups_pca100_rms_2, dist_rms_PCA100)
+silueta_hgroups_pca100_rms_7 <- silhouette(hgroups_pca100_rms_4, dist_rms_PCA100)
+silueta_hgroups_pca100_rms_8 <- silhouette(hgroups_pca100_rms_8, dist_rms_PCA100)
+
+mean_sil_pca100_rms_4 <- mean_silhouette(silueta_hgroups_pca100_rms_4)
+mean_sil_pca100_rms_7 <- mean_silhouette(silueta_hgroups_pca100_rms_7)
+mean_sil_pca100_rms_8 <- mean_silhouette(silueta_hgroups_pca100_rms_8)
+
+# MAX con UMAP
+silueta_hgroups_pca100_max_4 <- silhouette(hgroups_pca100_max_2, dist_max_PCA100)
+silueta_hgroups_pca100_max_7 <- silhouette(hgroups_pca100_max_4, dist_max_PCA100)
+silueta_hgroups_pca100_max_8 <- silhouette(hgroups_pca100_max_8, dist_max_PCA100)
+
+mean_sil_pca100_max_4 <- mean_silhouette(silueta_hgroups_pca100_max_4)
+mean_sil_pca100_max_7 <- mean_silhouette(silueta_hgroups_pca100_max_7)
+mean_sil_pca100_max_8 <- mean_silhouette(silueta_hgroups_pca100_max_8)
+
+#KM con PCA100: 
+
+silueta_pks_pca100_kmeans_k4 <- silhouette(pks_pca100_kmeans_k4$cluster, dist_pks_PCA100) 
+silueta_pks_pca100_kmeans_k7 <- silhouette(pks_pca100_kmeans_k7$cluster, dist_pks_PCA100)
+silueta_pks_pca100_kmeans_k8 <- silhouette(pks_pca100_kmeans_k8$cluster, dist_pks_PCA100)
+
+mean_sil_pks_pca100_kmeans_k4 <- mean_silhouette(silueta_pks_pca100_kmeans_k4)
+mean_sil_pks_pca100_kmeans_k7 <- mean_silhouette(silueta_pks_pca100_kmeans_k7)
+mean_sil_pks_pca100_kmeans_k8 <- mean_silhouette(silueta_pks_pca100_kmeans_k8)
+
+silueta_tic_pca100_kmeans_k4 <- silhouette(TIC_pca100_kmeans_k4$cluster, dist_TIC_PCA100) 
+silueta_tic_pca100_kmeans_k7 <- silhouette(TIC_pca100_kmeans_k7$cluster, dist_TIC_PCA100)
+silueta_tic_pca100_kmeans_k8 <- silhouette(TIC_pca100_kmeans_k8$cluster, dist_TIC_PCA100)
+
+mean_sil_tic_pca100_kmeans_k4 <- mean_silhouette(silueta_TIC_pca100_kmeans_k4)
+mean_sil_tic_pca100_kmeans_k7 <- mean_silhouette(silueta_TIC_pca100_kmeans_k7)
+mean_sil_tic_pca100_kmeans_k8 <- mean_silhouette(silueta_TIC_pca100_kmeans_k8)
+
+silueta_rms_pca100_kmeans_k4 <- silhouette(RMS_pca100_kmeans_k4$cluster, dist_RMS_PCA100) 
+silueta_rms_pca100_kmeans_k7 <- silhouette(RMS_pca100_kmeans_k7$cluster, dist_RMS_PCA100)
+silueta_rms_pca100_kmeans_k8 <- silhouette(RMS_pca100_kmeans_k8$cluster, dist_RMS_PCA100)
+
+mean_sil_rms_pca100_kmeans_k4 <- mean_silhouette(silueta_RMS_pca100_kmeans_k4)
+mean_sil_rms_pca100_kmeans_k7 <- mean_silhouette(silueta_RMS_pca100_kmeans_k7)
+mean_sil_rms_pca100_kmeans_k8 <- mean_silhouette(silueta_RMS_pca100_kmeans_k8)
+
+silueta_max_pca100_kmeans_k4 <- silhouette(MAX_pca100_kmeans_k4$cluster, dist_MAX_PCA100) 
+silueta_max_pca100_kmeans_k7 <- silhouette(MAX_pca100_kmeans_k7$cluster, dist_MAX_PCA100)
+silueta_max_pca100_kmeans_k8 <- silhouette(MAX_pca100_kmeans_k8$cluster, dist_MAX_PCA100)
+
+mean_sil_max_pca100_kmeans_k4 <- mean_silhouette(silueta_MAX_pca100_kmeans_k4)
+mean_sil_max_pca100_kmeans_k7 <- mean_silhouette(silueta_MAX_pca100_kmeans_k7)
+mean_sil_max_pca100_kmeans_k8 <- mean_silhouette(silueta_MAX_pca100_kmeans_k8)
+
+#DBSCAN con PCA100: 
+# PKS sin reducir
+silueta_dbscan_pks_pca100_4 <- silhouette(dbscan_PCA100_pks, dist_pks_PCA100) 
+mean_dbscan_pca100_pks_4 <- mean_silhouette(silueta_dbscan_pks_pca100_4)
+# TIC sin reducir
+silueta_dbscan_TIC_pca100_4 <- silhouette(dbscan_PCA100_TIC, dist_TIC_PCA100)
+mean_dbscan_TIC_pca100_4 <- mean_silhouette(silueta_dbscan_TIC_pca100_4)
+# RMS
+silueta_dbscan_RMS_pca100_4 <- silhouette(dbscan_PCA100_RMS, dist_RMS_PCA100)
+mean_dbscan_RMS_pca100_4 <- mean_silhouette(silueta_dbscan_RMS_pca100_4)
+# MAX
+silueta_dbscan_MAX_pca100_4 <- silhouette(dbscan_PCA100_MAX, dist_MAX_PCA100)
+mean_dbscan_MAX_pca100_4 <- mean_silhouette(silueta_dbscan_MAX_pca100_4)
